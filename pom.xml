@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.beybunproject</groupId>
+  <artifactId>xoola</artifactId>
+  <version>1.0.0-RC5</version>
+  <name>xoola</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+  <distributionManagement>
+    <repository>
+      <id>eidrepo</id>
+      <url>http://eidrepo:8081/nexus/content/repositories/releases</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>snapshots</id>
+      <url>http://eidrepo:8081/nexus/content/repositories/snapshots</url>
+    </snapshotRepository>
+    
+  
+<!--
+    <repository>
+      <id>releases</id>
+      <url>http://kysbuildsrv.ug.net:9090/nexus/content/repositories/releases</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>snapshots</id>
+      <url>http://kysbuildsrv.ug.net:9090/nexus/content/repositories/snapshots</url>
+    </snapshotRepository> -->
+  </distributionManagement>
+  
+  
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.16</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty</artifactId>
+      <version>3.6.3.Final</version>
+    </dependency>
+  </dependencies>
+</project>
