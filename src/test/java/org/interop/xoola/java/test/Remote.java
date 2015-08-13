@@ -25,7 +25,6 @@ public class Remote implements RemoteInterface {
   private static final Logger LOGGER = Logger.getLogger(Remote.class);
 
   /**
-   * @param server
    * @throws Throwable
    */
   public Remote() {
@@ -36,6 +35,16 @@ public class Remote implements RemoteInterface {
     try {
       return "" + (a + b);
     } finally {
+    }
+  }
+
+
+  @Override
+  public void tooLongMethod(){
+    try {
+      Thread.sleep(10000);
+    }catch (Exception ex){
+
     }
   }
 

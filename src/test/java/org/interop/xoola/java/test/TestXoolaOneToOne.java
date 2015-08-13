@@ -46,10 +46,10 @@ import org.junit.rules.TestName;
 @SuppressWarnings("unused")
 public class TestXoolaOneToOne {
 
- public class OneToOneControl implements ClientAccessController {
+ public static class OneToOneControl implements ClientAccessController {
   String client = "";
   {
-   client = xoolaProperties.get(XoolaProperty.CLIENTID).toString();
+   client = TestXoolaOneToOne.xoolaProperties.get(XoolaProperty.CLIENTID).toString();
   }
 
   @Override
@@ -59,13 +59,14 @@ public class TestXoolaOneToOne {
 
  }
 
+
  private static final Logger LOGGER = Logger.getLogger(TestXoolaOneToOne.class);
  private static Xoola client;
  private static Xoola server;
 
  @Rule
  public TestName name = new TestName();
- private static Properties xoolaProperties;
+ public static Properties xoolaProperties;
 
  @BeforeClass
  public static void setUp() throws Throwable {
@@ -171,3 +172,4 @@ public class TestXoolaOneToOne {
   }
  }
 }
+

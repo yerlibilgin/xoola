@@ -18,272 +18,273 @@
  */
 package org.interop.xoola.core;
 
+import org.apache.log4j.Logger;
+import org.interop.xoola.exception.XCommunicationException;
+import org.interop.xoola.exception.XIOException;
+import org.interop.xoola.exception.XInvocationException;
+import org.interop.xoola.transport.Invocation;
+import org.interop.xoola.transport.Response;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
-
-import org.apache.log4j.Logger;
-import org.interop.xoola.exception.XCommunicationException;
-import org.interop.xoola.exception.XInvocationException;
-import org.interop.xoola.transport.Invocation;
-import org.interop.xoola.transport.Response;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author dogan, muhammet
- * 
  */
-public abstract class XoolaInvocationHandler extends Observable {
- public class ObserverWrapper implements Observer {
+public abstract class XoolaInvocationHandler extends Observable implements CancellableInvocation {
+  public class ObserverWrapper implements Observer {
 
-  private final XoolaConnectionListener connectionStateListener;
+    private final XoolaConnectionListener connectionStateListener;
 
-  public ObserverWrapper(XoolaConnectionListener connectionStateListener) {
-   this.connectionStateListener = connectionStateListener;
+    public ObserverWrapper(XoolaConnectionListener connectionStateListener) {
+      this.connectionStateListener = connectionStateListener;
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+      XoolaChannelState xcs = (XoolaChannelState) arg;
+      LOGGER.debug("update connection observer (" + Boolean.TRUE.equals(xcs.connected) + ")");
+      if (xcs.connected) {
+        this.connectionStateListener.connected(XoolaInvocationHandler.this, xcs);
+      } else {
+        this.connectionStateListener.disconnected(XoolaInvocationHandler.this, xcs);
+      }
+    }
+  }
+
+  private static final Logger LOGGER = Logger.getLogger(XoolaInvocationHandler.class);
+  final HashMap<String, Object> NAMES_MAP = new HashMap<String, Object>();
+  private AtomicInteger invocationCounter;
+
+  private Response receipt;
+  private Properties properties;
+  private Object mutex;
+
+  /**
+   * @param properties
+   */
+  public XoolaInvocationHandler(Properties properties) {
+    this.properties = properties;
+    this.mutex = new Object();
+  }
+
+  /**
+   * Invokes the method of the given remote object with args params.
+   *
+   * @param remoteClientName
+   * @param message
+   * @return the result of the remote operation
+   * @throws XCommunicationException  if the invocation doesn't finish in the given time
+   * @throws XInvocationException     if a remote error occurs.
+   * @throws IllegalArgumentException if a null result comes.
+   */
+  public synchronized Object invokeRemote(String remoteClientName, Invocation message) {
+    synchronized (this.mutex) {
+      receipt = null; //reset it in any case.
+      sendMessage(remoteClientName, message);
+      long timeout = Long.parseLong(gerProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT));
+      try {
+        this.mutex.wait(timeout);
+      } catch (InterruptedException e) {
+        //someone interrupted me.
+        //consume receipt just in case
+        consumeReceipt();
+        throw new XIOException("Invocation interrupted");
+      }
+    }
+    Response result = this.consumeReceipt();
+
+    if (result != null) {
+      if (result.returnValue instanceof Throwable) {
+        throw new XCommunicationException((Throwable) result.returnValue);
+      } else {
+        return result.returnValue;
+      }
+    }
+
+    throw new XCommunicationException("Couldn't get a result in the given time");
   }
 
   @Override
-  public void update(Observable o, Object arg) {
-   XoolaChannelState xcs = (XoolaChannelState) arg;
-   LOGGER.debug("update connection observer (" + Boolean.TRUE.equals(xcs.connected) + ")");
-   if (xcs.connected) {
-    this.connectionStateListener.connected(XoolaInvocationHandler.this, xcs);
-   } else {
-    this.connectionStateListener.disconnected(XoolaInvocationHandler.this, xcs);
-   }
-  }
- }
-
- private static final Logger LOGGER = Logger.getLogger(XoolaInvocationHandler.class);
- final HashMap < String, Object > NAMES_MAP = new HashMap < String, Object >();
-
- private Response receipt;
- private Properties properties;
- private Object mutex;
-
- /**
-  * @param properties
-  */
- public XoolaInvocationHandler(Properties properties) {
-  this.properties = properties;
-  this.mutex = new Object();
- }
-
- /**
-  * Invokes the method of the given remote object with args params.
-  * 
-  * @param remoteId
-  * 
-  * @param incovation
-  * @return the result of the remote operation
-  * 
-  * @throws XCommunicationException
-  *          if the invocation doesn't finish in the given time
-  * @throws XInvocationException
-  *          if a remote error occurs.
-  * @throws IllegalArgumentException
-  *          if a null result comes.
-  */
- public synchronized Object invokeRemote(String remoteClientName, Invocation message) {
-  synchronized (this.mutex) {
-   sendMessage(remoteClientName, message);
-   long timeout = Long.parseLong(gerProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT));
-   synchronized (this.mutex) {
-    waitLoop: while (true) {
-     try {
-      this.mutex.wait(timeout);
-      break waitLoop;
-     } catch (InterruptedException e) {
-      continue waitLoop;
-     }
+  public void cancel() {
+    try {
+      synchronized (this.mutex) {
+        this.mutex.notify();
+      }
+    } catch (Exception ex) {
     }
-   }
-  }
-  Response result = this.consumeReceipt();
-
-  if (result != null) {
-   if (result.returnValue instanceof Throwable) {
-    throw new XCommunicationException((Throwable) result.returnValue);
-   } else {
-    return result.returnValue;
-   }
   }
 
-  throw new XCommunicationException("Couldn't get a result in the given time");
- }
+  public String gerProperty(String key) {
+    return this.properties.get(key).toString();
+  }
 
- public String gerProperty(String key) {
-  return this.properties.get(key).toString();
- }
+  protected abstract void sendMessage(String remoteName, Invocation message);
 
- protected abstract void sendMessage(String remoteName, Invocation message);
+  public Object receiveInvocation(Invocation invocation) {
+    Response response = new Response();
+    if (this.NAMES_MAP.containsKey(invocation.objectName)) {
+      // System.out.print(invocation.objectName + "." + invocation.methodName + ".(");
+      Object callee = this.NAMES_MAP.get(invocation.objectName);
+      Object args[] = invocation.params;
 
- public Object receiveInvocation(Invocation invocation) {
-  Response response = new Response();
-  if (this.NAMES_MAP.containsKey(invocation.objectName)) {
-   // System.out.print(invocation.objectName + "." + invocation.methodName + ".(");
-   Object callee = this.NAMES_MAP.get(invocation.objectName);
-   Object args[] = invocation.params;
+      Class<?> argTypes[] = null;
+      if (args == null) {
+        argTypes = new Class<?>[0];
+      } else {
+        // for (Object object : args) {
+        // System.out.print(((object == null) ? "null" : object.getClass()) + ",");
+        // }
+        // System.out.println(")");
+        argTypes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+          if (args[i] == null) {
+            argTypes[i] = null;
+          } else {
+            argTypes[i] = args[i].getClass();
+          }
+        }
+      }
+      try {
+        Method m = findMethod(callee.getClass(), invocation.methodName, argTypes);
+        m.setAccessible(true);
+        Object o = m.invoke(callee, args);
+        response.returnValue = o;
+      } catch (Throwable e) {
+        response.returnValue = e;
+      }
 
-   Class < ? > argTypes[] = null;
-   if (args == null) {
-    argTypes = new Class < ? >[0];
-   } else {
-    // for (Object object : args) {
-    // System.out.print(((object == null) ? "null" : object.getClass()) + ",");
-    // }
-    // System.out.println(")");
-    argTypes = new Class < ? >[args.length];
-    for (int i = 0; i < args.length; i++) {
-     if (args[i] == null) {
-      argTypes[i] = null;
-     } else {
-      argTypes[i] = args[i].getClass();
-     }
+    } else {
+      LOGGER.warn("No registered object named \"" + invocation.objectName + "\"");
+      response.returnValue = new UnsupportedOperationException("No registered object named \"" + invocation.objectName + "\"");
     }
-   }
-   try {
-    Method m = findMethod(callee.getClass(), invocation.methodName, argTypes);
-    m.setAccessible(true);
-    Object o = m.invoke(callee, args);
-    response.returnValue = o;
-   } catch (Throwable e) {
-    response.returnValue = e;
-   }
-
-  } else {
-   LOGGER.warn("No registered object named \"" + invocation.objectName + "\"");
-   response.returnValue = new UnsupportedOperationException("No registered object named \"" + invocation.objectName + "\"");
+    return response;
   }
-  return response;
- }
 
- private Method findMethod(Class < ? extends Object > class1, String methodName, Class < ? >[] argTypes) throws NoSuchMethodException {
-  Method[] allMethods = class1.getMethods();
-  for (Method method : allMethods) {
-   if (method.getName().equals(methodName)) {
-    if (matchParameters(method, argTypes)) {
-     return method;
+  private Method findMethod(Class<? extends Object> class1, String methodName, Class<?>[] argTypes) throws NoSuchMethodException {
+    Method[] allMethods = class1.getMethods();
+    for (Method method : allMethods) {
+      if (method.getName().equals(methodName)) {
+        if (matchParameters(method, argTypes)) {
+          return method;
+        }
+      }
     }
-   }
-  }
-  throw new NoSuchMethodException(class1.getName() + "." + methodName);
- }
-
- private boolean matchParameters(Method method, Class < ? >[] argTypes) {
-  Class < ? >[] types = method.getParameterTypes();
-  if (types.length != argTypes.length)
-   return false;
-
-  for (int i = 0; i < types.length; i++) {
-   Class < ? > type = types[i];
-   Class < ? > type2 = argTypes[i];
-   if (type2 == null) {
-    if (type.isPrimitive())
-     return false;
-   } else if (!type.isAssignableFrom(type2) && !comparePrimitives(type, type2))
-    return false;
+    throw new NoSuchMethodException(class1.getName() + "." + methodName);
   }
 
-  return true;
- }
+  private boolean matchParameters(Method method, Class<?>[] argTypes) {
+    Class<?>[] types = method.getParameterTypes();
+    if (types.length != argTypes.length)
+      return false;
 
- private boolean comparePrimitives(Class < ? > type, Class < ? > type2) {
-  return
+    for (int i = 0; i < types.length; i++) {
+      Class<?> type = types[i];
+      Class<?> type2 = argTypes[i];
+      if (type2 == null) {
+        if (type.isPrimitive())
+          return false;
+      } else if (!type.isAssignableFrom(type2) && !comparePrimitives(type, type2))
+        return false;
+    }
 
-  checkPrimitive("int", "java.lang.Integer", type, type2) || checkPrimitive("boolean", "java.lang.Boolean", type, type2) ||
-    checkPrimitive("double", "java.lang.Double", type, type2) || checkPrimitive("float", "java.lang.Float", type, type2) ||
-    checkPrimitive("byte", "java.lang.Byte", type, type2) || checkPrimitive("short", "java.lang.Short", type, type2) ||
-    checkPrimitive("char", "java.lang.Character", type, type2);
- }
-
- private boolean checkPrimitive(String primitive, String wrapper, Class < ? > type, Class < ? > type2) {
-  return type.getName().equals(primitive) && type2.getName().equals(wrapper);
- }
-
- public void receiveResponse(Response receipt) {
-  this.receipt = receipt;
-
-  synchronized (this.mutex) {
-   this.mutex.notify();
+    return true;
   }
- }
 
- public void addConnectionListener(XoolaConnectionListener connectionStateListener) {
-  this.addObserver(new ObserverWrapper(connectionStateListener));
- }
+  private boolean comparePrimitives(Class<?> type, Class<?> type2) {
+    return
 
- protected synchronized Response consumeReceipt() {
-  try {
-   return this.receipt;
-  } finally {
-   this.receipt = null;
+        checkPrimitive("int", "java.lang.Integer", type, type2) || checkPrimitive("boolean", "java.lang.Boolean", type, type2) ||
+            checkPrimitive("double", "java.lang.Double", type, type2) || checkPrimitive("float", "java.lang.Float", type, type2) ||
+            checkPrimitive("byte", "java.lang.Byte", type, type2) || checkPrimitive("short", "java.lang.Short", type, type2) ||
+            checkPrimitive("char", "java.lang.Character", type, type2);
   }
- }
 
- /**
-  * @param name
-  */
- public void unregister(String name) {
-  this.NAMES_MAP.remove(name);
- }
-
- /**
-  * Registers an object with <code>name</code> as a service. The remote client
-  * will use that name to call a method of that object
-  * 
-  * @param name
-  *         Name for remote call
-  * @param object
-  *         The object (as a remote service)
-  * 
-  * @throws IllegalArgumentException
-  *          If an object is already registered with the given name
-  */
- public void registerObject(String name, Object object) {
-  if (this.NAMES_MAP.containsKey(name)) {
-   throw new IllegalArgumentException("An object for key [" + name + "] has already been registered");
+  private boolean checkPrimitive(String primitive, String wrapper, Class<?> type, Class<?> type2) {
+    return type.getName().equals(primitive) && type2.getName().equals(wrapper);
   }
-  this.NAMES_MAP.put(name, object);
- }
 
- public void connected(String remoteId) {
-  LOGGER.debug("connected(" + remoteId + ")");
-  this.setChanged();
-  this.notifyObservers(new XoolaChannelState(remoteId, true));
- }
+  public void receiveResponse(Response receipt) {
+    this.receipt = receipt;
+    synchronized (this.mutex) {
+      this.mutex.notify();
+    }
+  }
 
- public void disconnected(String remoteId) {
-  LOGGER.debug("disconnected(" + remoteId + ")");
-  this.setChanged();
-  this.notifyObservers(new XoolaChannelState(remoteId, false));
- }
+  public void addConnectionListener(XoolaConnectionListener connectionStateListener) {
+    this.addObserver(new ObserverWrapper(connectionStateListener));
+  }
 
- public < T > T get(Class < T > interfaze, String remoteObjectName) {
-  return get(interfaze, null, remoteObjectName, false);
- }
+  protected synchronized Response consumeReceipt() {
+    try {
+      return this.receipt;
+    } finally {
+      this.receipt = null;
+    }
+  }
 
- public < T > T get(Class < T > interfaze, String remoteObjectName, boolean async) {
-  return get(interfaze, null, remoteObjectName, async);
- }
+  /**
+   * @param name
+   */
+  public void unregister(String name) {
+    this.NAMES_MAP.remove(name);
+  }
 
- public < T > T get(Class < T > interfaze, String remoteName, String remoteObjectName) {
-  return get(interfaze, remoteName, remoteObjectName, false);
- }
+  /**
+   * Registers an object with <code>name</code> as a service. The remote client
+   * will use that name to call a method of that object
+   *
+   * @param name   Name for remote call
+   * @param object The object (as a remote service)
+   * @throws IllegalArgumentException If an object is already registered with the given name
+   */
+  public void registerObject(String name, Object object) {
+    if (this.NAMES_MAP.containsKey(name)) {
+      throw new IllegalArgumentException("An object for key [" + name + "] has already been registered");
+    }
+    this.NAMES_MAP.put(name, object);
+  }
 
- public abstract < T > T get(Class < T > interfaze, String remoteName, String remoteObjectName, boolean async);
+  public void connected(String remoteId) {
+    LOGGER.debug("connected(" + remoteId + ")");
+    this.setChanged();
+    this.notifyObservers(new XoolaChannelState(remoteId, true));
+  }
 
- @SuppressWarnings("unchecked")
- protected < T > T createProxyForClass(Class < T > interfaze, String remoteName, String remoteObjectName, boolean async) {
-  return (T) Proxy.newProxyInstance(interfaze.getClassLoader(), new Class < ? >[] { interfaze }, new RemoteProxyHandler(remoteName,
-    remoteObjectName, this, async));
- }
+  public void disconnected(String remoteId) {
+    LOGGER.debug("disconnected(" + remoteId + ")");
+    this.setChanged();
+    this.notifyObservers(new XoolaChannelState(remoteId, false));
+  }
 
- public abstract void start();
+  public <T> T get(Class<T> interfaze, String remoteObjectName) {
+    return get(interfaze, null, remoteObjectName, false);
+  }
 
- public abstract void stop();
+  public <T> T get(Class<T> interfaze, String remoteObjectName, boolean async) {
+    return get(interfaze, null, remoteObjectName, async);
+  }
 
- public abstract String getId();
+  public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName) {
+    return get(interfaze, remoteName, remoteObjectName, false);
+  }
+
+  public abstract <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async);
+
+  @SuppressWarnings("unchecked")
+  protected <T> T createProxyForClass(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
+    return (T) Proxy.newProxyInstance(interfaze.getClassLoader(), new Class<?>[]{interfaze}, new RemoteProxyHandler(remoteName,
+        remoteObjectName, this, async));
+  }
+
+  public abstract void start();
+
+  public abstract void stop();
+
+  public abstract String getId();
 }

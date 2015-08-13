@@ -1,12 +1,14 @@
 package org.interop.xoola.tcpcom.connmanager.server;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
+import org.interop.xoola.core.XoolaProperty;
 import org.interop.xoola.exception.XIOException;
 import org.interop.xoola.tcpcom.connmanager.ChannelGuard;
 import org.interop.xoola.tcpcom.connmanager.XoolaNettyHandler;
@@ -31,10 +33,26 @@ public class NettyServer extends XoolaNettyHandler {
  private ServerBootstrap bootstrap;
  private Channel acceptor;
  private ServerRegistry serverRegistry;
+ private IClassLoaderProvider provider;
 
  // private final ServerListener listener;
  public NettyServer(Properties properties, XoolaInvocationHandler xoolaHandler) {
   super(properties, xoolaHandler);
+
+  String classLoaderProviderClassName = properties.getProperty(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
+  if (classLoaderProviderClassName != null){
+   try {
+    this.provider = (IClassLoaderProvider) Thread.currentThread().getContextClassLoader().loadClass(classLoaderProviderClassName).newInstance();
+   } catch (Exception e) {
+    LOGGER.error(e.getMessage(), e);
+    provider = new IClassLoaderProvider() {
+     @Override
+     public ClassLoader getClassLoader() {
+      return Thread.currentThread().getContextClassLoader();
+     }
+    };
+   }
+  }
   serverRegistry = new ServerRegistry(properties);
  }
 
@@ -55,7 +73,7 @@ public class NettyServer extends XoolaNettyHandler {
   this.bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
    @Override
    public ChannelPipeline getPipeline() throws Exception {
-    return Channels.pipeline(new ObjectEncoder(), new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(null)),
+    return Channels.pipeline(new ObjectEncoder(), new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())),
       new ServerHandshakeHandler(NettyServer.this, responseTimeout), channelGuard, NettyServer.this);
    }
   });

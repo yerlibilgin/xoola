@@ -33,4 +33,5 @@ public interface XoolaProperty {
   public static final String RECEIVE_BUFFER_SIZE = "RECEIVE_BUFFER_SIZE";
   public static final String PING_TIMEOUT = "PING_TIMEOUT";
   public static final String CLIENT_ACCESS_CONTROLLER_CLASS = "CLIENT_ACCESS_CONTROLLER_CLASS";
+  public static final String CLASS_LOADER_PROVIDER_CLASS =  "CLASS_LOADER_PROVIDER_CLASS";
 }

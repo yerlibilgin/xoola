@@ -37,6 +37,13 @@ public class Xoola {
  }
 
  /**
+  * A proxy method for providing a cancelling mechanism for the underlying method call.
+  */
+ public void cancel(){
+  this.handler.cancel();
+ }
+
+ /**
   * This method is used to get a proxy for the given remote object.
   */
  public < T > T get(Class < T > interfaze, String remoteObjectName) {

@@ -37,4 +37,10 @@ public interface RemoteInterface extends Serializable {
    * @param appId
    */
   void strangeVoidMethod(Long appId);
+
+
+  /**
+   * When called, waits for years.
+   */
+  void tooLongMethod();
 }

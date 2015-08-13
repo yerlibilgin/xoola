@@ -9,7 +9,7 @@ import org.jboss.netty.channel.Channel;
 
 public class ServerRegistry {
   
-  public static ClassLoader classLoader;
+  public static ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
   private static final Logger LOGGER = Logger.getLogger(ServerRegistry.class);
   private ClientAccessController clientAccessController;
 
