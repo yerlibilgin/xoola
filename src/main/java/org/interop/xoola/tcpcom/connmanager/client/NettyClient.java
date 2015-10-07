@@ -1,10 +1,13 @@
 package org.interop.xoola.tcpcom.connmanager.client;
 
-import java.net.InetSocketAddress;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
 import org.interop.xoola.core.XoolaProperty;
@@ -12,150 +15,138 @@ import org.interop.xoola.exception.XCommunicationException;
 import org.interop.xoola.tcpcom.connmanager.ChannelGuard;
 import org.interop.xoola.tcpcom.connmanager.XoolaNettyHandler;
 import org.interop.xoola.tcpcom.handshake.ClientHandshakeHandler;
-import org.jboss.netty.bootstrap.ClientBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.jboss.netty.handler.codec.serialization.ClassResolvers;
-import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
+
+import java.net.InetSocketAddress;
+import java.util.Properties;
 
 /**
  * @author dogan, muhammet
  */
+@ChannelHandler.Sharable
 public class NettyClient extends XoolaNettyHandler {
- private static final Logger LOGGER = Logger.getLogger(NettyClient.class);
- private ClientBootstrap bootstrap;
+  private static final Logger LOGGER = Logger.getLogger(NettyClient.class);
 
- private String serverHost;
- private InetSocketAddress remoteAddress;
- private Long connectTimeout;
- private ChannelGuard channelGuard;
- protected Channel channel;
- private String clientId;
+  private String serverHost;
+  private InetSocketAddress remoteAddress;
+  private Integer connectTimeout;
+  private ChannelGuard channelGuard;
+  protected Channel channel;
+  private String clientId;
+  public int pingTimeout;
+  public int reconnectRetryTimeout;
 
- public NettyClient(Properties properties, XoolaInvocationHandler xoolaHandler) {
-  super(properties, xoolaHandler);
-  this.clientId = (String) properties.get(XoolaProperty.CLIENTID);
-  this.serverHost = (String) properties.get(XoolaProperty.HOST);
-  this.connectTimeout = Long.parseLong(properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT).toString());
-  this.remoteAddress = new InetSocketAddress(this.serverHost, this.serverPort);
- }
-
- @Override
- public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-  super.messageReceived(ctx, e);
- }
-
- @Override
- public void start() {
-  this.createMainClient();
- }
-
- private void createMainClient() {
-  // Standard netty bootstrapping stuff.
-  Executor bossPool = Executors.newFixedThreadPool(120);
-  Executor workerPool = Executors.newFixedThreadPool(120);
-  ChannelFactory factory = new NioClientSocketChannelFactory(bossPool, workerPool);
-  this.bootstrap = new ClientBootstrap(factory);
-  channelGuard = new ChannelGuard(pingTimeout, bootstrap, remoteAddress);
-  // Pipeline
-  this.bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-   @Override
-   public ChannelPipeline getPipeline() throws Exception {
-    final ClientHandshakeHandler handshakeHandler = new ClientHandshakeHandler(NettyClient.this, connectTimeout);
-    return Channels.pipeline(new ObjectEncoder(), new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(null)), channelGuard,
-      handshakeHandler, NettyClient.this);
-   }
-  });
-
-  // Set the connection timeout
-  this.bootstrap.setOption("connectTimeoutMillis", this.connectTimeout);
-  this.bootstrap.setOption("keepAlive", true);
-  this.bootstrap.setOption("tcpNoDelay", true);
-  this.bootstrap.connect(this.remoteAddress);
- }
-
- @Override
- public void stop() {
-  try {
-   this.channelGuard.kill();
-  } catch (Exception ex) {
-  }
-  if (this.channel != null) {
-   this.channel.close().awaitUninterruptibly();
-  }
-  try {
-   this.bootstrap.releaseExternalResources();
-  } catch (Exception ex) {
-  }
-  LOGGER.info("CLIENT - Stopped.");
- }
-
- public boolean isAvailable() {
-  return this.channel != null && this.channel.isConnected();
- }
-
- @Override
- public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-  LOGGER.warn("Exception " + e.getCause().getMessage());
-  LOGGER.error(e.getCause().getCause(), e.getCause());
-  e.getCause().printStackTrace();
- }
-
- @Override
- public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-  try {
-   ctx.getPipeline().remove(this);
-  } catch (Exception ex) {
-  }
- }
-
- /**
-  * @return the channel
-  */
- public Channel getChannel() {
-  return this.channel;
- }
-
- /**
-  * @param channel
-  *          the channel to set
-  */
- public void setChannel(Channel channel) {
-  this.channel = channel;
- }
-
- @Override
- public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-  LOGGER.debug("Channel disconnected");
-  try {
-   ctx.getPipeline().remove(this);
-  } catch (Exception ex) {
+  public NettyClient(Properties properties, XoolaInvocationHandler xoolaHandler) {
+    super(properties, xoolaHandler);
+    this.clientId = (String) properties.get(XoolaProperty.CLIENTID);
+    this.serverHost = (String) properties.get(XoolaProperty.HOST);
+    this.pingTimeout = Integer.parseInt(properties.getProperty(XoolaProperty.PING_TIMEOUT, "15000"));
+    this.reconnectRetryTimeout = Integer.parseInt(properties.getProperty(XoolaProperty.RECONNECT_RETRY_TIMEOUT, "" + pingTimeout));
+    this.connectTimeout = Integer.parseInt(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, "50000"));
+    this.remoteAddress = new InetSocketAddress(this.serverHost, this.serverPort);
   }
 
-  this.channel = null;
-  if (this.invocationHandler != null) {
-   this.invocationHandler.disconnected(null);
+  @Override
+  public void start() {
+    this.createMainClient();
   }
- }
 
- @Override
- public void send(String remoteName, Object message) {
-  if (this.channel == null) {
-   throw new XCommunicationException("Not connected to any servers");
+  private void createMainClient() {
+    EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+    Bootstrap bootstrap = new Bootstrap(); // (1)
+    bootstrap.group(workerGroup); // (2)
+    bootstrap.channel(NioSocketChannel.class); // (3)
+    bootstrap.option(ChannelOption.SO_KEEPALIVE, true); // (4)
+
+    channelGuard = new ChannelGuard(pingTimeout, reconnectRetryTimeout, bootstrap, remoteAddress);
+
+    bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+      @Override
+      public void initChannel(SocketChannel ch) throws Exception {
+        final ClientHandshakeHandler handshakeHandler = new ClientHandshakeHandler(NettyClient.this, handshakeTimeout);
+        ch.pipeline().addLast(new ObjectEncoder());
+        ch.pipeline().addLast(new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(null)));
+        ch.pipeline().addLast(channelGuard);
+        ch.pipeline().addLast(handshakeHandler);
+        ch.pipeline().addLast(NettyClient.this);
+      }
+    });
+
+    // Set the connection timeout
+    bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, this.connectTimeout);
+    bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
+    bootstrap.option(ChannelOption.TCP_NODELAY, true);
+    bootstrap.connect(this.remoteAddress);
   }
-  this.channel.write(message);
- }
 
- public String getClientId() {
-  return clientId;
- }
+  @Override
+  public void stop() {
+    try {
+      this.channelGuard.kill();
+    } catch (Exception ex) {
+    }
+    if (this.channel != null) {
+      this.channel.close();
+    }
+    LOGGER.info("CLIENT - Stopped.");
+  }
+
+  public boolean isAvailable() {
+    return this.channel != null && this.channel.isActive();
+  }
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    LOGGER.warn("Exception " + cause.getCause().getMessage());
+    LOGGER.error(cause.getCause().getCause(), cause.getCause());
+    cause.getCause().printStackTrace();
+  }
+
+  @Override
+  public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+    try {
+      ctx.pipeline().remove(this);
+    } catch (Exception ex) {
+    }
+  }
+
+  /**
+   * @return the channel
+   */
+  public Channel getChannel() {
+    return this.channel;
+  }
+
+  /**
+   * @param channel the channel to set
+   */
+  public void setChannel(Channel channel) {
+    this.channel = channel;
+  }
+
+  @Override
+  public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+    LOGGER.debug("Channel disconnected");
+    try {
+      ctx.pipeline().remove(this);
+    } catch (Exception ex) {
+    }
+
+    this.channel = null;
+    if (this.invocationHandler != null) {
+      this.invocationHandler.disconnected(null);
+    }
+  }
+
+  @Override
+  public void send(String remoteName, Object message) {
+    if (this.channel == null) {
+      throw new XCommunicationException("Not connected to any servers");
+    }
+    this.channel.writeAndFlush(message);
+  }
+
+  public String getClientId() {
+    return clientId;
+  }
 }

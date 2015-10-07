@@ -3,9 +3,9 @@ package org.interop.xoola.tcpcom.connmanager.server;
 import java.util.HashMap;
 import java.util.Properties;
 
+import io.netty.channel.Channel;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaProperty;
-import org.jboss.netty.channel.Channel;
 
 public class ServerRegistry {
   

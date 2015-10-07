@@ -1,11 +1,13 @@
 package org.interop.xoola.tcpcom.connmanager.server;
 
-import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
 import org.interop.xoola.core.XoolaProperty;
@@ -13,131 +15,128 @@ import org.interop.xoola.exception.XIOException;
 import org.interop.xoola.tcpcom.connmanager.ChannelGuard;
 import org.interop.xoola.tcpcom.connmanager.XoolaNettyHandler;
 import org.interop.xoola.tcpcom.handshake.ServerHandshakeHandler;
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelException;
-import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.jboss.netty.handler.codec.serialization.ClassResolvers;
-import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 
+import java.net.InetSocketAddress;
+import java.util.Properties;
+
+@ChannelHandler.Sharable
 public class NettyServer extends XoolaNettyHandler {
- private static final Logger LOGGER = Logger.getLogger(NettyServer.class);
- private ServerBootstrap bootstrap;
- private Channel acceptor;
- private ServerRegistry serverRegistry;
- private IClassLoaderProvider provider;
+  private static final Logger LOGGER = Logger.getLogger(NettyServer.class);
+  private ServerBootstrap bootstrap;
+  private ChannelFuture acceptor;
+  private ServerRegistry serverRegistry;
+  private IClassLoaderProvider provider;
+  private long idleChannelKillTimeout;
+ private  EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+  EventLoopGroup workerGroup = new NioEventLoopGroup();
 
- // private final ServerListener listener;
- public NettyServer(Properties properties, XoolaInvocationHandler xoolaHandler) {
-  super(properties, xoolaHandler);
+  // private final ServerListener listener;
+  public NettyServer(Properties properties, XoolaInvocationHandler xoolaHandler) {
+    super(properties, xoolaHandler);
 
-  String classLoaderProviderClassName = properties.getProperty(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
-  if (classLoaderProviderClassName != null){
-   try {
-    this.provider = (IClassLoaderProvider) Thread.currentThread().getContextClassLoader().loadClass(classLoaderProviderClassName).newInstance();
-   } catch (Exception e) {
+    String classLoaderProviderClassName = properties.getProperty(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
+    idleChannelKillTimeout = Long.parseLong(properties.getProperty(XoolaProperty.IDLE_CHANNEL_KILL_TIMEOUT, "90000"));
+    if (classLoaderProviderClassName != null) {
+      try {
+        this.provider = (IClassLoaderProvider) Thread.currentThread().getContextClassLoader().loadClass(classLoaderProviderClassName).newInstance();
+      } catch (Exception e) {
+        LOGGER.error(e.getMessage(), e);
+      }
+    }
+    if (provider == null) {
+      provider = new IClassLoaderProvider() {
+        @Override
+        public ClassLoader getClassLoader() {
+          return Thread.currentThread().getContextClassLoader();
+        }
+      };
+    }
+    serverRegistry = new ServerRegistry(properties);
+  }
+
+  public void start() {
+    this.createMainServer();
+  }
+
+  /**
+   * @return
+   */
+  private boolean createMainServer() {
+    this.bootstrap = new ServerBootstrap();
+    bootstrap.group(bossGroup, workerGroup);
+    bootstrap.channel(NioServerSocketChannel.class);
+
+    bootstrap.childHandler(new ChannelInitializer<SocketChannel>() { // (4)
+      @Override
+      public void initChannel(SocketChannel ch) throws Exception {
+        ch.pipeline().addLast(new ObjectEncoder());
+        ch.pipeline().addLast(new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
+        ch.pipeline().addLast(new ChannelGuard(idleChannelKillTimeout));
+        ch.pipeline().addLast(new ServerHandshakeHandler(NettyServer.this, handshakeTimeout));
+        ch.pipeline().addLast(NettyServer.this);
+      }
+    });
+
+    // Create channel
+    try {
+      this.acceptor = this.bootstrap.bind(new InetSocketAddress(this.serverPort));
+      LOGGER.info("Server bound to *:" + this.serverPort + " " + this.acceptor);
+      return true;
+    } catch (ChannelException ex) {
+      ex.printStackTrace();
+      LOGGER.error("Failed to bind to *:" + this.serverPort);
+      return false;
+    }
+  }
+
+  @Override
+  public void stop() {
+    this.acceptor.channel().close();
+    serverRegistry.clear();
+    workerGroup.shutdownGracefully();
+    bossGroup.shutdownGracefully();
+    LOGGER.info("Server Stopped.");
+  }
+
+  @Override
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) throws Exception {
     LOGGER.error(e.getMessage(), e);
-    provider = new IClassLoaderProvider() {
-     @Override
-     public ClassLoader getClassLoader() {
-      return Thread.currentThread().getContextClassLoader();
-     }
-    };
-   }
-  }
-  serverRegistry = new ServerRegistry(properties);
- }
-
- public void start() {
-  this.createMainServer();
- }
-
- /**
-  * @return
-  */
- private boolean createMainServer() {
-  Executor bossPool = Executors.newCachedThreadPool();
-  Executor workerPool = Executors.newCachedThreadPool();
-  ChannelFactory factory = new NioServerSocketChannelFactory(bossPool, workerPool);
-  this.bootstrap = new ServerBootstrap(factory);
-  final ChannelGuard channelGuard = new ChannelGuard(pingTimeout);
-
-  this.bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-   @Override
-   public ChannelPipeline getPipeline() throws Exception {
-    return Channels.pipeline(new ObjectEncoder(), new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())),
-      new ServerHandshakeHandler(NettyServer.this, responseTimeout), channelGuard, NettyServer.this);
-   }
-  });
-
-  // Create channel
-  try {
-   this.acceptor = this.bootstrap.bind(new InetSocketAddress(this.serverPort));
-   LOGGER.info("Server bound to *:" + this.serverPort + " " + this.acceptor);
-   return true;
-  } catch (ChannelException ex) {
-   ex.printStackTrace();
-   LOGGER.error("Failed to bind to *:" + this.serverPort);
-   this.bootstrap.releaseExternalResources();
-   return false;
-  }
- }
-
- @Override
- public void stop() {
-  this.bootstrap.releaseExternalResources();
-  this.acceptor.close();
-  serverRegistry.clear();
-  LOGGER.info("Server Stopped.");
- }
-
- @Override
- public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-  LOGGER.error(e.getCause().getMessage(), e.getCause());
- }
-
- @Override
- public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-  LOGGER.error("Channel closed");
- }
-
- @Override
- public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-  Channel channel = ctx.getChannel();
-  if (this.invocationHandler != null && serverRegistry.hasChannel(channel)) {
-   String remoteId = serverRegistry.getUser(channel);
-   serverRegistry.removeUser(remoteId);
-   this.invocationHandler.disconnected(remoteId);
-  }
- }
-
- @Override
- public void send(String remoteName, Object message) {
-  if (serverRegistry.hasUser(remoteName)) {
-   serverRegistry.getChannel(remoteName).write(message);
-   return;
   }
 
-  throw new XIOException("Remote client not connected");
- }
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    LOGGER.error("Channel inactive");
+  }
 
- public void addClient(String receivedClientId, Channel channel) {
-  serverRegistry.addUser(receivedClientId, channel);
- }
+  @Override
+  public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+    Channel channel = ctx.channel();
+    if (this.invocationHandler != null && serverRegistry.hasChannel(channel)) {
+      String remoteId = serverRegistry.getUser(channel);
+      serverRegistry.removeUser(remoteId);
+      this.invocationHandler.disconnected(remoteId);
+    }
+  }
 
- public ServerRegistry getServerRegistry() {
-  return serverRegistry;
- }
+  @Override
+  public void send(String remoteName, Object message) {
+    if (serverRegistry.hasUser(remoteName)) {
+      serverRegistry.getChannel(remoteName).writeAndFlush(message);
+      return;
+    }
 
- public void setServerRegistry(ServerRegistry serverRegistry) {
-  this.serverRegistry = serverRegistry;
- }
+    throw new XIOException("Remote client not connected");
+  }
+
+  public void addClient(String receivedClientId, Channel channel) {
+    serverRegistry.addUser(receivedClientId, channel);
+  }
+
+  public ServerRegistry getServerRegistry() {
+    return serverRegistry;
+  }
+
+  public void setServerRegistry(ServerRegistry serverRegistry) {
+    this.serverRegistry = serverRegistry;
+  }
 }

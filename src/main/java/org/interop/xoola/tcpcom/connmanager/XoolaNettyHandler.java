@@ -18,56 +18,59 @@
  */
 package org.interop.xoola.tcpcom.connmanager;
 
-import java.util.Properties;
-
+import io.netty.channel.ChannelHandlerAdapter;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
 import org.interop.xoola.core.XoolaProperty;
 import org.interop.xoola.transport.Invocation;
 import org.interop.xoola.transport.Response;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author dogan, muhammet
- * 
  */
-public abstract class XoolaNettyHandler extends SimpleChannelHandler {
+public abstract class XoolaNettyHandler extends ChannelHandlerAdapter {
   private static final Logger LOGGER = Logger.getLogger(XoolaNettyHandler.class);
   // Xoola
   public XoolaInvocationHandler invocationHandler;
-  public int pingTimeout;
   protected int serverPort;
   private String serverId;
   protected long responseTimeout;
+  protected long handshakeTimeout;
 
   public XoolaNettyHandler(Properties properties, XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
-    this.serverPort = Integer.parseInt(properties.get(XoolaProperty.PORT).toString());
-    this.serverId = (String) properties.get(XoolaProperty.SERVERID);
-    this.pingTimeout = Integer.parseInt(properties.get(XoolaProperty.PING_TIMEOUT).toString());
-    this.responseTimeout = Long.parseLong(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT));
+    this.serverPort = Integer.parseInt(properties.getProperty(XoolaProperty.PORT));
+    this.serverId = properties.getProperty(XoolaProperty.SERVERID);
+    this.responseTimeout = Long.parseLong(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, "50000"));
+    this.handshakeTimeout = Long.parseLong(properties.getProperty(XoolaProperty.HANDSHAKE_TIMEOUT, "50000"));
   }
 
+  final ExecutorService executorService = Executors.newCachedThreadPool();
+
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-    Object message = e.getMessage();
+  public void channelRead(final ChannelHandlerContext ctx, final Object message) {
+
     if (message instanceof Invocation) {
-      Object result = this.getHandler().receiveInvocation((Invocation) message);
-      ctx.getChannel().write(result);
+      executorService.submit(new Runnable() {
+        private Object actualMessage = message;
+        private ChannelHandlerContext actualContext = ctx;
+        @Override
+        public void run() {
+          Object result = XoolaNettyHandler.this.getHandler().receiveInvocation((Invocation) actualMessage);
+          actualContext.channel().writeAndFlush(result);
+        }
+      });
     } else if (message instanceof Response) {
       this.getHandler().receiveResponse((Response) message);
     } else {
-      System.err.println("----------------------- invalid instance " + message);
+      LOGGER.warn("Invalid message " + message);
     }
-  }
-
-  @Override
-  public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    super.channelClosed(ctx, e);
-    LOGGER.info("Channel closed " + e.getChannel());
   }
 
   /**
@@ -78,8 +81,7 @@ public abstract class XoolaNettyHandler extends SimpleChannelHandler {
   }
 
   /**
-   * @param handler
-   *          the handler to set
+   * @param handler the handler to set
    */
   public void setHandler(XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
@@ -92,7 +94,7 @@ public abstract class XoolaNettyHandler extends SimpleChannelHandler {
   public void setServerId(String serverId) {
     this.serverId = serverId;
   }
-  
+
   public abstract void send(String id, Object message);
 
   public abstract void start();

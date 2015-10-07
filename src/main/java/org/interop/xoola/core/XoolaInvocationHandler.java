@@ -94,7 +94,7 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
         //someone interrupted me.
         //consume receipt just in case
         consumeReceipt();
-        throw new XIOException("Invocation interrupted");
+        throw new XCommunicationException(e);
       }
     }
     Response result = this.consumeReceipt();

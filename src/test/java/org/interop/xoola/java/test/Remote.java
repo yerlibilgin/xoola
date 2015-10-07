@@ -42,7 +42,7 @@ public class Remote implements RemoteInterface {
   @Override
   public void tooLongMethod(){
     try {
-      Thread.sleep(10000);
+      Thread.sleep(50000);
     }catch (Exception ex){
 
     }

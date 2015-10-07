@@ -1,28 +1,21 @@
 package org.interop.xoola.tcpcom.handshake;
 
+import io.netty.channel.*;
+import org.apache.log4j.Logger;
+import org.interop.xoola.tcpcom.connmanager.client.NettyClient;
+import org.interop.xoola.tcpcom.connmanager.client.PingPong;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.log4j.Logger;
-import org.interop.xoola.tcpcom.connmanager.client.NettyClient;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.DownstreamMessageEvent;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
-
 /**
- * @author <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
+ * original author: <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
+ * modifier by: myildiz
  */
-public class ClientHandshakeHandler extends SimpleChannelHandler {
+public class ClientHandshakeHandler extends ChannelHandlerAdapter {
 
   private static final Logger LOGGER = Logger.getLogger(ClientHandshakeHandler.class);
 
@@ -30,7 +23,7 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
   private final AtomicBoolean handshakeComplete;
   private final AtomicBoolean handshakeFailed;
   private final CountDownLatch latch = new CountDownLatch(1);
-  private final Queue<MessageEvent> messages = new ArrayDeque<MessageEvent>();
+  private final Queue<Object> messages = new ArrayDeque<Object>();
   private final Object handshakeMutex = new Object();
 
   private NettyClient nettyClient;
@@ -44,7 +37,7 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
 
   // SimpleChannelHandler ---------------------------------------------------
   @Override
-  public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+  public void channelRead(ChannelHandlerContext ctx, Object message) throws Exception {
     if (this.handshakeFailed.get()) {
       // Bail LOGGER.info fast if handshake already failed
       return;
@@ -55,7 +48,7 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
       // handler, then immediately send it upwards.
       // Chances are it's the last time a message passes through
       // this handler...
-      super.messageReceived(ctx, e);
+      super.channelRead(ctx, message);
       return;
     }
 
@@ -67,12 +60,12 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
       }
 
       if (this.handshakeComplete.get()) {
-        super.messageReceived(ctx, e);
+        super.channelRead(ctx, message);
         return;
       }
 
       // Parse the challenge.
-      String recvId = ((HandshakeMessage) e.getMessage()).message;
+      String recvId = ((HandshakeMessage) message).message;
       String expectedServerId = nettyClient.getServerId();
       if (!expectedServerId.equals(recvId)) {
         LOGGER.info("Handshake failed: expected remote id is " + expectedServerId + " but received '" + recvId + "'");
@@ -80,13 +73,13 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
         return;
       }
 
-      LOGGER.info("Flush messages.");
-      for (MessageEvent message : this.messages) {
-        ctx.sendDownstream(message);
-      }
-
       LOGGER.info("Handshake ok. Removing handshake handler from pipeline.");
-      ctx.getPipeline().remove(this);
+      ctx.pipeline().remove(this);
+
+      LOGGER.info("Flush messages.");
+      for (Object msg : this.messages) {
+        ctx.writeAndFlush(msg);
+      }
 
       LOGGER.debug("this.fireHandshakeSucceeded(ctx);");
       this.fireHandshakeSucceeded(ctx);
@@ -94,11 +87,10 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
   }
 
   @Override
-  public void channelConnected(final ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-    LOGGER.info("Outgoing connection established to: " + e.getChannel().getRemoteAddress());
+  public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+    LOGGER.info("Outgoing connection established to: " + ctx.channel().remoteAddress());
     // Write the handshake & add a timeout listener.
-    ChannelFuture f = Channels.future(ctx.getChannel());
-    f.addListener(new ChannelFutureListener() {
+    ctx.channel().newSucceededFuture().addListener(new ChannelFutureListener() {
       @Override
       public void operationComplete(ChannelFuture future) throws Exception {
         // Once this message is sent, start the timeout checker.
@@ -155,17 +147,21 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
         }.start();
       }
     });
-
-    Channel c = ctx.getChannel();
     // kendi id'ni server'a yolla.
-    ctx.sendDownstream(new DownstreamMessageEvent(c, f, new HandshakeMessage(nettyClient.getClientId()), null));
+    ctx.channel().writeAndFlush(new HandshakeMessage(nettyClient.getClientId()));
   }
 
   @Override
-  public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+  public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
     // Before doing anything, ensure that noone else is working by
     // acquiring a lock on the handshakeMutex.
     synchronized (this.handshakeMutex) {
+      //if this is a handshake message, let it go
+      if (msg instanceof HandshakeMessage) {
+        super.write(ctx, msg, promise);
+        return;
+      }
+
       if (this.handshakeFailed.get()) {
         // If the handshake failed meanwhile, discard any messages.
         return;
@@ -175,13 +171,13 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
       // messages still passed through this handler, then forward
       // them downwards.
       if (this.handshakeComplete.get()) {
-        LOGGER.info("Handshake already completed, not " + "appending '" + e.getMessage().toString().trim()
+        LOGGER.info("Handshake already completed, not " + "appending '" + msg.toString().trim()
             + "' to queue!");
-        super.writeRequested(ctx, e);
+        super.write(ctx, msg, promise);
       } else {
         // Otherwise, queue messages in order until the handshake
         // completes.
-        this.messages.offer(e);
+        this.messages.offer(msg);
       }
     }
   }
@@ -190,14 +186,14 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
     this.handshakeComplete.set(true);
     this.handshakeFailed.set(true);
     this.latch.countDown();
-    ctx.getChannel().close();
+    ctx.close();
   }
 
   private void fireHandshakeSucceeded(final ChannelHandlerContext ctx) {
     this.handshakeComplete.set(true);
     this.handshakeFailed.set(false);
     this.latch.countDown();
-    ClientHandshakeHandler.this.nettyClient.setChannel(ctx.getChannel());
+    ClientHandshakeHandler.this.nettyClient.setChannel(ctx.channel());
 
     if (this.nettyClient.invocationHandler != null) {
       new Thread(new Runnable() {
@@ -217,7 +213,7 @@ public class ClientHandshakeHandler extends SimpleChannelHandler {
   }
 
   @Override
-  public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-    e.getCause().printStackTrace();
+  public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) throws Exception {
+    e.printStackTrace();
   }
 }

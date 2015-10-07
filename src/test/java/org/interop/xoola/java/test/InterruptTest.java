@@ -20,6 +20,7 @@ public class InterruptTest {
 
   public static class OneToOneControl implements ClientAccessController {
     String client = "";
+
     {
       client = InterruptTest.xoolaProperties.get(XoolaProperty.CLIENTID).toString();
     }
@@ -30,6 +31,7 @@ public class InterruptTest {
     }
 
   }
+
   private static final Logger LOGGER = Logger.getLogger(TestXoolaOneToOne.class);
   private static Xoola client;
   private static Xoola server;
@@ -81,27 +83,32 @@ public class InterruptTest {
 
     final Thread mainThread = Thread.currentThread();
 
-    new Thread(){
+    new Thread() {
       @Override
       public void run() {
         //wait 3 milliseconds and then interrupt the main thread.
         try {
-          Thread.sleep(3000);
+          Thread.sleep(10000);
           mainThread.interrupt();
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
       }
     }.start();
+    boolean interrupted = false;
     try {
       proxy.tooLongMethod();
+    } catch (Exception ex) {
+      LOGGER.error(ex.getMessage(), ex);
+      Throwable cause = ex;
+      while(cause.getCause() != null) cause = cause.getCause();
 
-      throw new Exception("Thread was not interrupted!");
-    }catch (Exception ex) {
-      ex.printStackTrace();
-
-
+      if (cause instanceof InterruptedException)
+        interrupted = true;
     }
+
+    if (interrupted == false)
+      throw new RuntimeException("Thread was not interrupted!");
 
     server.unregisterObject("remoteTestObject");
 

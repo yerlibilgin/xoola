@@ -26,7 +26,6 @@ public interface XoolaProperty {
   public static final String MODE = "MODE";
   public static final String HOST = "HOST";
   public static final String PORT = "PORT";
-  public static final String PING_PORT = "PING_PORT";
   public static final String SERVERID = "SERVERID";
   public static final String CLIENTID = "CLIENTID";
   public static final String NETWORK_RESPONSE_TIMEOUT = "NETWORK_RESPONSE_TIMEOUT";
@@ -34,4 +33,7 @@ public interface XoolaProperty {
   public static final String PING_TIMEOUT = "PING_TIMEOUT";
   public static final String CLIENT_ACCESS_CONTROLLER_CLASS = "CLIENT_ACCESS_CONTROLLER_CLASS";
   public static final String CLASS_LOADER_PROVIDER_CLASS =  "CLASS_LOADER_PROVIDER_CLASS";
+  public static final String RECONNECT_RETRY_TIMEOUT = "RECONNECT_RETRY_TIMEOUT";
+  public static final String HANDSHAKE_TIMEOUT = "HANDSHAKE_TIMEOUT";
+  public static final String IDLE_CHANNEL_KILL_TIMEOUT = "HANDSHAKE_TIMEOUT";
 }
