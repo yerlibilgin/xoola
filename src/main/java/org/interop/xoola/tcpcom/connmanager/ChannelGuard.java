@@ -52,16 +52,20 @@ public class ChannelGuard extends ChannelHandlerAdapter {
 
   @Override
   public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    super.channelActive(ctx);
     this.ctx = ctx;
     connectedFlag.set(true);
-    super.channelActive(ctx);
   }
 
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-    connectedFlag.set(false);
-    this.ctx = null;
     super.channelInactive(ctx);
+    this.ctx = null;
+    connectedFlag.set(false);
+    try {
+      timer.cancel();
+    } catch (Throwable ex) {
+    }
   }
 
   @Override
