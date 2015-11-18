@@ -106,16 +106,13 @@ public class NettyServer extends XoolaNettyHandler {
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     LOGGER.error("Channel inactive");
+
+    notifyClientDisconnect(ctx);
   }
 
   @Override
   public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
-    Channel channel = ctx.channel();
-    if (this.invocationHandler != null && serverRegistry.hasChannel(channel)) {
-      String remoteId = serverRegistry.getUser(channel);
-      serverRegistry.removeUser(remoteId);
-      this.invocationHandler.disconnected(remoteId);
-    }
+    notifyClientDisconnect(ctx);
   }
 
   @Override
@@ -138,5 +135,14 @@ public class NettyServer extends XoolaNettyHandler {
 
   public void setServerRegistry(ServerRegistry serverRegistry) {
     this.serverRegistry = serverRegistry;
+  }
+
+  private void notifyClientDisconnect(ChannelHandlerContext ctx) {
+    Channel channel = ctx.channel();
+    if (this.invocationHandler != null && serverRegistry.hasChannel(channel)) {
+      String remoteId = serverRegistry.getUser(channel);
+      serverRegistry.removeUser(remoteId);
+      this.invocationHandler.disconnected(remoteId);
+    }
   }
 }
