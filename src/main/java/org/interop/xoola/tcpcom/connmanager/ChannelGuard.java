@@ -11,7 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @ChannelHandler.Sharable
-public class ChannelGuard extends ChannelHandlerAdapter {
+public class ChannelGuard extends ChannelDuplexHandler {
   private static final Logger LOGGER = Logger.getLogger(ChannelGuard.class);
   private Timer timer;
 
@@ -37,7 +37,7 @@ public class ChannelGuard extends ChannelHandlerAdapter {
     timer.scheduleAtFixedRate(new TimerTask() {
       @Override
       public void run() {
-        if (System.currentTimeMillis() - lastTalkTime > idleChannelKillTimeout) {
+        if (false){//System.currentTimeMillis() - lastTalkTime > idleChannelKillTimeout) {
           //a long gap detected, kill the connection.
           LOGGER.warn("Long inactive period. Kill connection");
           try {

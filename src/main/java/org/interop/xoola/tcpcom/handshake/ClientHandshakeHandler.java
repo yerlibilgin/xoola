@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * original author: <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
  * modifier by: myildiz
  */
-public class ClientHandshakeHandler extends ChannelHandlerAdapter {
+public class ClientHandshakeHandler extends ChannelDuplexHandler {
 
   private static final Logger LOGGER = Logger.getLogger(ClientHandshakeHandler.class);
 
@@ -201,7 +201,7 @@ public class ClientHandshakeHandler extends ChannelHandlerAdapter {
         public void run() {
           try {
             Thread.sleep(100);
-          } catch (Exception ex) {
+          } catch (Exception ignored) {
           }
 
           ClientHandshakeHandler.this.nettyClient.invocationHandler.connected(null);

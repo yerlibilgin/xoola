@@ -22,6 +22,7 @@ import java.util.Properties;
 @ChannelHandler.Sharable
 public class NettyServer extends XoolaNettyHandler {
   private static final Logger LOGGER = Logger.getLogger(NettyServer.class);
+  private static final int _1M = 1024*1024;
   private ServerBootstrap bootstrap;
   private ChannelFuture acceptor;
   private ServerRegistry serverRegistry;
@@ -70,7 +71,7 @@ public class NettyServer extends XoolaNettyHandler {
       @Override
       public void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline().addLast(new ObjectEncoder());
-        ch.pipeline().addLast(new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
+        ch.pipeline().addLast(new ObjectDecoder(101*_1M, ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
         ch.pipeline().addLast(new ChannelGuard(idleChannelKillTimeout));
         ch.pipeline().addLast(new ServerHandshakeHandler(NettyServer.this, handshakeTimeout));
         ch.pipeline().addLast(NettyServer.this);

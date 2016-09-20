@@ -18,6 +18,7 @@
  */
 package org.interop.xoola.tcpcom.connmanager;
 
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -34,7 +35,7 @@ import java.util.concurrent.Executors;
 /**
  * @author dogan, muhammet
  */
-public abstract class XoolaNettyHandler extends ChannelHandlerAdapter {
+public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   private static final Logger LOGGER = Logger.getLogger(XoolaNettyHandler.class);
   // Xoola
   public XoolaInvocationHandler invocationHandler;

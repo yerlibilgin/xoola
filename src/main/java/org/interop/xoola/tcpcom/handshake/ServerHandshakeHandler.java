@@ -18,7 +18,7 @@ import io.netty.channel.*;
  * original author: <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
  * modifier by: myildiz
  */
-public class ServerHandshakeHandler extends ChannelHandlerAdapter {
+public class ServerHandshakeHandler extends ChannelDuplexHandler {
 
   private static final Logger LOGGER = Logger.getLogger(ServerHandshakeHandler.class);
 
@@ -40,6 +40,9 @@ public class ServerHandshakeHandler extends ChannelHandlerAdapter {
   }
 
   // SimpleChannelHandler ---------------------------------------------------
+
+  //@Override
+
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object message) throws Exception {
     if (this.handshakeFailed.get()) {

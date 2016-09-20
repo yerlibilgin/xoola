@@ -25,6 +25,7 @@ import java.util.Properties;
 @ChannelHandler.Sharable
 public class NettyClient extends XoolaNettyHandler {
   private static final Logger LOGGER = Logger.getLogger(NettyClient.class);
+  private static final int _1M = 1024 * 1024;
 
   private String serverHost;
   private InetSocketAddress remoteAddress;
@@ -65,7 +66,7 @@ public class NettyClient extends XoolaNettyHandler {
       public void initChannel(SocketChannel ch) throws Exception {
         final ClientHandshakeHandler handshakeHandler = new ClientHandshakeHandler(NettyClient.this, handshakeTimeout);
         ch.pipeline().addLast(new ObjectEncoder());
-        ch.pipeline().addLast(new ObjectDecoder(ClassResolvers.weakCachingConcurrentResolver(null)));
+        ch.pipeline().addLast(new ObjectDecoder(101 * _1M, ClassResolvers.weakCachingConcurrentResolver(null)));
         ch.pipeline().addLast(channelGuard);
         ch.pipeline().addLast(handshakeHandler);
         ch.pipeline().addLast(NettyClient.this);
@@ -83,7 +84,7 @@ public class NettyClient extends XoolaNettyHandler {
   public void stop() {
     try {
       this.channelGuard.kill();
-    } catch (Exception ex) {
+    } catch (Exception ignored) {
     }
     if (this.channel != null) {
       this.channel.close();
@@ -106,7 +107,7 @@ public class NettyClient extends XoolaNettyHandler {
   public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
     try {
       ctx.pipeline().remove(this);
-    } catch (Exception ex) {
+    } catch (Exception ignored) {
     }
   }
 
@@ -129,7 +130,7 @@ public class NettyClient extends XoolaNettyHandler {
     LOGGER.debug("Channel disconnected");
     try {
       ctx.pipeline().remove(this);
-    } catch (Exception ex) {
+    } catch (Exception ignored) {
     }
 
     this.channel = null;
