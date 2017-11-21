@@ -13,41 +13,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ChannelHandler.Sharable
 public class ChannelGuard extends ChannelDuplexHandler {
   private static final Logger LOGGER = Logger.getLogger(ChannelGuard.class);
-  private Timer timer;
+  private Timer pingTimer;
+  private Timer reconnectTimer;
 
   AtomicBoolean connectedFlag = new AtomicBoolean(false);
   private Bootstrap bootstrap;
   private InetSocketAddress remoteAddress;
   private ChannelHandlerContext ctx;
-  private long lastTalkTime;
 
   public ChannelGuard(long pingTimeout, long reconnectRetryTimeout, Bootstrap bootstrap, InetSocketAddress remoteAddress) {
     this.bootstrap = bootstrap;
     this.remoteAddress = remoteAddress;
-    timer = new Timer("Status listener", true);
-    timer.scheduleAtFixedRate(pingTask, pingTimeout, pingTimeout);
-    timer.scheduleAtFixedRate(lostChannelReconnector, reconnectRetryTimeout, reconnectRetryTimeout);
+    pingTimer = new Timer("Ping Timer", true);
+    pingTimer.scheduleAtFixedRate(pingTask, pingTimeout, pingTimeout);
+    reconnectTimer = new Timer("Reconnect Timer", true);
+    reconnectTimer.scheduleAtFixedRate(lostChannelReconnector, reconnectRetryTimeout, reconnectRetryTimeout);
   }
 
-  /**
-   * This constructor is for the server. It does not ping but it receives pongs.
-   */
-  public ChannelGuard(final long idleChannelKillTimeout) {
-    timer = new Timer("CHANNEL GUARD", true);
-    timer.scheduleAtFixedRate(new TimerTask() {
-      @Override
-      public void run() {
-        if (false){//System.currentTimeMillis() - lastTalkTime > idleChannelKillTimeout) {
-          //a long gap detected, kill the connection.
-          LOGGER.warn("Long inactive period. Kill connection");
-          try {
-            ctx.close();
-          } catch (Exception ex) {
-          }
-          timer.cancel();
-        }
-      }
-    }, idleChannelKillTimeout, idleChannelKillTimeout);
+  public ChannelGuard() {
   }
 
   @Override
@@ -58,20 +41,20 @@ public class ChannelGuard extends ChannelDuplexHandler {
   }
 
   @Override
+  public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
+    super.close(ctx, promise);
+  }
+
+  @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     super.channelInactive(ctx);
     this.ctx = null;
     connectedFlag.set(false);
-    try {
-      timer.cancel();
-    } catch (Throwable ex) {
-    }
   }
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object message) throws Exception {
     // if we received a ping, then we are the server, pong it
-    lastTalkTime = System.currentTimeMillis();
     if (message instanceof PingPong) {
       PingPong pp = (PingPong) message;
       if (pp.p == PingPong.PING && this.ctx != null) {
@@ -95,6 +78,7 @@ public class ChannelGuard extends ChannelDuplexHandler {
     public void run() {
       try {
         if (!connectedFlag.get()) {
+          LOGGER.debug("Connection lost, reconnect!");
           bootstrap.connect(remoteAddress);
         }
       } catch (Exception e) {
@@ -117,7 +101,8 @@ public class ChannelGuard extends ChannelDuplexHandler {
 
   public void kill() {
     try {
-      timer.cancel();
+      pingTimer.cancel();
+      reconnectTimer.cancel();
     } catch (Exception ex) {
     }
   }

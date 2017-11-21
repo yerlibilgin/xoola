@@ -18,19 +18,18 @@
  */
 package org.interop.xoola.java.test;
 
-import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.interop.xoola.core.*;
+import org.interop.xoola.core.Xoola;
+import org.interop.xoola.core.XoolaProperty;
+import org.interop.xoola.core.XoolaTierMode;
 import org.interop.xoola.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.*;
 import org.junit.rules.TestName;
 
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Intended for tests.
@@ -40,7 +39,7 @@ import java.util.concurrent.CountDownLatch;
 @SuppressWarnings("unused")
 public class TestXoolaLargeMessage {
   private static final Logger LOGGER = Logger.getLogger(TestXoolaLargeMessage.class);
-  private static final int _1M = 1024*1024;
+  private static final int _1M = 1024 * 1024;
   private static Xoola server;
   private static Xoola client;
 
@@ -61,6 +60,9 @@ public class TestXoolaLargeMessage {
   @Rule
   public TestName name = new TestName();
 
+  static MultiFace multiFace = new MultiFace();
+  static long end;
+
   @BeforeClass
   public static void setUp() throws Throwable {
     PropertyConfigurator.configure("logging.properties");
@@ -74,11 +76,10 @@ public class TestXoolaLargeMessage {
     Properties clientProperties = new Properties();
     clientProperties.load(new FileReader("xoola.properties"));
     clientProperties.put(XoolaProperty.MODE, XoolaTierMode.CLIENT);
-    clientProperties.put(XoolaProperty.CLIENTID, "CLIIIIIENNNT");
+    clientProperties.put(XoolaProperty.CLIENTID, "CLIENT");
     client = Xoola.init(clientProperties);
 
-    server.registerObject("multiFace", new MultiFace());
-    client.registerObject("multiFace", new MultiFace());
+    server.registerObject("multiFace", multiFace);
     server.start();
     client.start();
     Thread.sleep(1000);
@@ -98,66 +99,110 @@ public class TestXoolaLargeMessage {
   @Test
   public void test1M() throws InterruptedException {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[1*_1M];
+    byte[] b = new byte[1 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
   @Test
   public void test5M() throws InterruptedException {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[5*_1M];
+    byte[] b = new byte[5 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
   @Test
   public void test10M() throws InterruptedException {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[10*_1M];
+    byte[] b = new byte[10 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
   @Test
   public void test25M() throws InterruptedException {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[25*_1M];
+    byte[] b = new byte[25 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
   @Test
   public void test50M() throws InterruptedException {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[50*_1M];
+    byte[] b = new byte[50 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
   @Test
   public void test100M() throws InterruptedException {
+
+    long a = System.currentTimeMillis();
+
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
-    byte []b = new byte[100*_1M];
+    byte[] b = new byte[100 * _1M];
     new Random().nextBytes(b);
 
-    org.junit.Assert.assertArrayEquals(imf.call(b), b);
+
+    imf.initiate(b.length);
+    imf.transfer(b, 0, b.length);
+
+
+    System.out.println("Time " + (end-a));
+    org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 
 
   public interface ILargeMessageService {
-    public byte[] call(byte[] param);
+    void transfer(byte[] param, int index, int length);
+
+    void initiate(int bytes);
   }
 
-  public static class MultiFace implements ILargeMessageService {
+  public static class MultiFace implements TestXoolaLargeMessageParallel.ILargeMessageService {
+
+
+    private byte[] buffer;
+
     @Override
-    public synchronized byte[] call(byte[] param) {
-      return param;
+    public synchronized void transfer(byte[] param, int index, int length) {
+      System.out.println(param.length);
+      System.out.println(buffer);
+      System.arraycopy(param, 0, buffer, index, length);
+
+      System.out.println("bitti");
+      end = System.currentTimeMillis();
+    }
+
+    @Override
+    public void initiate(int bytes) {
+      System.out.println("Initiate");
+      this.buffer = new byte[bytes];
     }
 
   }

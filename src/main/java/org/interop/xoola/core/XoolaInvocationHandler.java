@@ -20,7 +20,6 @@ package org.interop.xoola.core;
 
 import org.apache.log4j.Logger;
 import org.interop.xoola.exception.XCommunicationException;
-import org.interop.xoola.exception.XIOException;
 import org.interop.xoola.exception.XInvocationException;
 import org.interop.xoola.transport.Invocation;
 import org.interop.xoola.transport.Response;
@@ -87,7 +86,7 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     synchronized (this.mutex) {
       receipt = null; //reset it in any case.
       sendMessage(remoteClientName, message);
-      long timeout = Long.parseLong(gerProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT));
+      long timeout = Long.parseLong(this.properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT));
       try {
         this.mutex.wait(timeout);
       } catch (InterruptedException e) {
@@ -118,10 +117,6 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
       }
     } catch (Exception ex) {
     }
-  }
-
-  public String gerProperty(String key) {
-    return this.properties.get(key).toString();
   }
 
   protected abstract void sendMessage(String remoteName, Invocation message);

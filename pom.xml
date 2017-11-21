@@ -4,7 +4,7 @@
 
   <groupId>org.beybunproject</groupId>
   <artifactId>xoola</artifactId>
-  <version>1.2.3</version>
+  <version>1.3.0</version>
   <name>xoola</name>
 
   <build>
@@ -24,16 +24,16 @@
   <distributionManagement>
     <repository>
       <id>eidrepo</id>
-      <url>http://eidrepo:8081/nexus/content/repositories/releases</url>
+      <url>http://mindertestbed.org:8081/nexus/content/repositories/releases</url>
     </repository>
 
     <snapshotRepository>
       <id>snapshots</id>
-      <url>http://eidrepo:8081/nexus/content/repositories/snapshots</url>
+      <url>http://mindertestbed.org:8081/nexus/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
-  
-  
+
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

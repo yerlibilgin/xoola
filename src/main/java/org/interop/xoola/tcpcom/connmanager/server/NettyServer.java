@@ -27,7 +27,6 @@ public class NettyServer extends XoolaNettyHandler {
   private ChannelFuture acceptor;
   private ServerRegistry serverRegistry;
   private IClassLoaderProvider provider;
-  private long idleChannelKillTimeout;
  private  EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
   EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -36,7 +35,6 @@ public class NettyServer extends XoolaNettyHandler {
     super(properties, xoolaHandler);
 
     String classLoaderProviderClassName = properties.getProperty(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
-    idleChannelKillTimeout = Long.parseLong(properties.getProperty(XoolaProperty.IDLE_CHANNEL_KILL_TIMEOUT, "90000"));
     if (classLoaderProviderClassName != null) {
       try {
         this.provider = (IClassLoaderProvider) Thread.currentThread().getContextClassLoader().loadClass(classLoaderProviderClassName).newInstance();
@@ -72,7 +70,7 @@ public class NettyServer extends XoolaNettyHandler {
       public void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline().addLast(new ObjectEncoder());
         ch.pipeline().addLast(new ObjectDecoder(101*_1M, ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
-        ch.pipeline().addLast(new ChannelGuard(idleChannelKillTimeout));
+        ch.pipeline().addLast(new ChannelGuard());
         ch.pipeline().addLast(new ServerHandshakeHandler(NettyServer.this, handshakeTimeout));
         ch.pipeline().addLast(NettyServer.this);
       }

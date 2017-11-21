@@ -22,9 +22,9 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * 
+ *
  * @author dogan, muhammet
- * 
+ *
  */
 public class Xoola {
  public XoolaInvocationHandler handler;
@@ -85,7 +85,7 @@ public class Xoola {
  }
 
  /**
-  * @param p1
+  * @param properties
   * @return
   */
  public static Xoola init(Properties properties) {

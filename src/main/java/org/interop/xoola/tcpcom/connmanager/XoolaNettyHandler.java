@@ -1,20 +1,20 @@
 /*
  * XoolA is a remote method call bridge between java and dotnet platforms.
  * Copyright (C) 2010 Muhammet YILDIZ, Doğan ERSÖZ
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 package org.interop.xoola.tcpcom.connmanager;
 
@@ -25,6 +25,7 @@ import io.netty.channel.ChannelPromise;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
 import org.interop.xoola.core.XoolaProperty;
+import org.interop.xoola.core.XoolaPropertyDefaults;
 import org.interop.xoola.transport.Invocation;
 import org.interop.xoola.transport.Response;
 
@@ -46,10 +47,10 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
 
   public XoolaNettyHandler(Properties properties, XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
-    this.serverPort = Integer.parseInt(properties.getProperty(XoolaProperty.PORT));
-    this.serverId = properties.getProperty(XoolaProperty.SERVERID);
-    this.responseTimeout = Long.parseLong(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, "50000"));
-    this.handshakeTimeout = Long.parseLong(properties.getProperty(XoolaProperty.HANDSHAKE_TIMEOUT, "50000"));
+    this.serverPort = Integer.parseInt(properties.getProperty(XoolaProperty.PORT, XoolaPropertyDefaults.PORT));
+    this.serverId = properties.getProperty(XoolaProperty.SERVERID, XoolaPropertyDefaults.SERVERID);
+    this.responseTimeout = Long.parseLong(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT));
+    this.handshakeTimeout = Long.parseLong(properties.getProperty(XoolaProperty.HANDSHAKE_TIMEOUT, XoolaPropertyDefaults.HANDSHAKE_TIMEOUT));
   }
 
   final ExecutorService executorService = Executors.newCachedThreadPool();

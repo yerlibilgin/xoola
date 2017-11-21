@@ -14,7 +14,7 @@ public class XoolaClientInvocationHandler extends XoolaInvocationHandler {
   public XoolaClientInvocationHandler(Properties properties) {
     super(properties);
     this.nettyClient = new NettyClient(properties, this);
-    this.id = properties.get(XoolaProperty.CLIENTID).toString();
+    this.id = properties.getProperty(XoolaProperty.CLIENTID, "xoolaClient");
   }
 
   @Override
