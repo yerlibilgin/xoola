@@ -23,13 +23,15 @@ package org.interop.xoola.core;
  */
 public interface XoolaPropertyDefaults {
    String HOST = "localhost";
-   String PORT = "25000";
    String SERVERID = "xoolaServer";
    String CLIENTID = "xoolaClient";
-   String NETWORK_RESPONSE_TIMEOUT = "50000";
-   String PING_TIMEOUT = "50000";
-   String RECONNECT_RETRY_TIMEOUT = "10000";
-   String HANDSHAKE_TIMEOUT = "20000";
+
+   int PORT = 25000;
+   int NETWORK_RESPONSE_TIMEOUT = 50000;
+   int PING_TIMEOUT = 50000;
+   int RECONNECT_RETRY_TIMEOUT = 10000;
+   int HANDSHAKE_TIMEOUT = 20000;
+
    String CLIENT_ACCESS_CONTROLLER_CLASS = "CLIENT_ACCESS_CONTROLLER_CLASS";
    String CLASS_LOADER_PROVIDER_CLASS = "CLASS_LOADER_PROVIDER_CLASS";
 }

@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaProperty;
 
 public class ServerRegistry {
-  
+
   public static ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
   private static final Logger LOGGER = Logger.getLogger(ServerRegistry.class);
   private ClientAccessController clientAccessController;
@@ -17,7 +17,7 @@ public class ServerRegistry {
   public HashMap<Channel, String> inverseClientMap;
 
   public ServerRegistry(Properties properties) {
-    String className = properties.getProperty(XoolaProperty.CLIENT_ACCESS_CONTROLLER_CLASS);
+    String className = (String) properties.get(XoolaProperty.CLIENT_ACCESS_CONTROLLER_CLASS);
     inverseClientMap = new HashMap<Channel, String>();
     clientMap = new HashMap<String, Channel> ();
 
@@ -48,7 +48,7 @@ public class ServerRegistry {
   /**
    * Using the underlying client access provider, check if the user is allowed
    * in the system
-   * 
+   *
    * @param id
    * @return
    */
@@ -62,7 +62,7 @@ public class ServerRegistry {
 
   /**
    * When a user is connected, add him.
-   * 
+   *
    * @param userId
    * @param channel
    */

@@ -31,6 +31,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.interop.xoola.util.ObjectUtils;
 
 /**
  * @author dogan, muhammet
@@ -86,7 +87,7 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     synchronized (this.mutex) {
       receipt = null; //reset it in any case.
       sendMessage(remoteClientName, message);
-      long timeout = Long.parseLong(this.properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT));
+      long timeout = ObjectUtils.getOrDefault(this.properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
       try {
         this.mutex.wait(timeout);
       } catch (InterruptedException e) {

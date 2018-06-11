@@ -22,114 +22,138 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 /**
- *
  * @author dogan, muhammet
- *
  */
 public class Xoola {
- public XoolaInvocationHandler handler;
 
- /**
-  * @param xoolaHandler
-  */
- Xoola(XoolaInvocationHandler xoolaHandler) {
-  this.handler = xoolaHandler;
- }
+  public XoolaInvocationHandler handler;
 
- /**
-  * A proxy method for providing a cancelling mechanism for the underlying method call.
-  */
- public void cancel(){
-  this.handler.cancel();
- }
+  /**
+   * @param xoolaHandler
+   */
+  Xoola(XoolaInvocationHandler xoolaHandler) {
+    this.handler = xoolaHandler;
+  }
 
- /**
-  * This method is used to get a proxy for the given remote object.
-  */
- public < T > T get(Class < T > interfaze, String remoteObjectName) {
-  return (T) this.handler.get(interfaze, remoteObjectName);
- }
+  /**
+   * A proxy method for providing a cancelling mechanism for the underlying method call.
+   */
+  public void cancel() {
+    this.handler.cancel();
+  }
 
- public < T > T get(Class < T > interfaze, String remoteObjectName, boolean async) {
-  return (T) this.handler.get(interfaze, remoteObjectName, async);
- }
+  /**
+   * This method is used to get a proxy for the given remote object.
+   */
+  public <T> T get(Class<T> interfaze, String remoteObjectName) {
+    return (T) this.handler.get(interfaze, remoteObjectName);
+  }
 
- public < T > T get(Class < T > interfaze, String remoteName, String remoteObjectName) {
-  return (T) this.handler.get(interfaze, remoteName, remoteObjectName);
- }
+  public <T> T get(Class<T> interfaze, String remoteObjectName, boolean async) {
+    return (T) this.handler.get(interfaze, remoteObjectName, async);
+  }
 
- public < T > T get(Class < T > interfaze, String remoteName, String remoteObjectName, boolean async) {
-  return (T) this.handler.get(interfaze, remoteName, remoteObjectName, async);
- }
+  public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName) {
+    return (T) this.handler.get(interfaze, remoteName, remoteObjectName);
+  }
 
- /**
-  * Check {@link XoolaInvocationHandler#unregister(String name)}
-  */
- public void unregisterObject(String name) {
-  this.handler.unregister(name);
- }
+  public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
+    return (T) this.handler.get(interfaze, remoteName, remoteObjectName, async);
+  }
 
- /**
-  * Check
-  * {@link XoolaInvocationHandler#registerObject(String name, Object object)}
-  */
- public void registerObject(String name, Object object) {
-  this.handler.registerObject(name, object);
- }
+  /**
+   * Check {@link XoolaInvocationHandler#unregister(String name)}
+   */
+  public void unregisterObject(String name) {
+    this.handler.unregister(name);
+  }
 
- /**
-  *
-  */
- public void close() {
-  this.handler.stop();
- }
+  /**
+   * Check {@link XoolaInvocationHandler#registerObject(String name, Object object)}
+   */
+  public void registerObject(String name, Object object) {
+    this.handler.registerObject(name, object);
+  }
 
- /**
-  * @param properties
-  * @return
-  */
- public static Xoola init(Properties properties) {
-  Object tierMode = properties.get(XoolaProperty.MODE);
-  if (tierMode == null)
-   throw new IllegalArgumentException("Xoola properties do not contain MODE");
-  if (tierMode.equals(XoolaTierMode.CLIENT))
-   return new Xoola(new XoolaClientInvocationHandler(properties));
-  if (tierMode.equals(XoolaTierMode.SERVER))
-   return new Xoola(new XoolaServerInvocationHandler(properties));
-  throw new IllegalArgumentException("Illegal Xoola tier mode " + tierMode);
- }
+  /**
+   *
+   */
+  public void close() {
+    this.handler.stop();
+  }
 
- /**
-  * @param connectionListener
-  */
- public void addConnectionListener(XoolaConnectionListener connectionListener) {
-  this.handler.addConnectionListener(connectionListener);
- }
+  /**
+   * @param properties
+   * @return
+   */
+  public static Xoola init(Properties properties) {
 
- public String getId() {
-  return handler.getId();
- }
+    prepareParameters(properties);
 
- public void start() {
-  this.handler.start();
- }
+    Object tierMode = properties.get(XoolaProperty.MODE);
+    if (tierMode == null) {
+      throw new IllegalArgumentException("Xoola properties do not contain MODE");
+    }
+    if (tierMode.equals(XoolaTierMode.CLIENT)) {
+      return new Xoola(new XoolaClientInvocationHandler(properties));
+    }
+    if (tierMode.equals(XoolaTierMode.SERVER)) {
+      return new Xoola(new XoolaServerInvocationHandler(properties));
+    }
+    throw new IllegalArgumentException("Illegal Xoola tier mode " + tierMode);
+  }
 
- public void stop() {
-  this.handler.stop();
- }
+  /**
+   * Scan through the parameters and detect the parameters that are loaded using 'setProperty' convert them to the
+   * actual types
+   */
+  private static void prepareParameters(Properties properties) {
+    for (String name : properties.stringPropertyNames()) {
+      //@formatter:off
+      if (name.equalsIgnoreCase(XoolaProperty.PORT) ||
+          name.equalsIgnoreCase(XoolaProperty.PING_TIMEOUT) ||
+          name.equalsIgnoreCase(XoolaProperty.HANDSHAKE_TIMEOUT) ||
+          name.equalsIgnoreCase(XoolaProperty.NETWORK_RESPONSE_TIMEOUT) ||
+          name.equalsIgnoreCase(XoolaProperty.RECONNECT_RETRY_TIMEOUT)) {
+         //@formatter:on
+        properties.put(name, Integer.parseInt(properties.getProperty(name)));
+      } else {
+        properties.put(name, properties.getProperty(name));
+      }
+    }
+  }
 
- public void waitForConnection() throws InterruptedException {
-  final CountDownLatch latch = new CountDownLatch(1);
-  addConnectionListener(new XoolaConnectionListener() {
-   @Override
-   public void disconnected(XoolaInvocationHandler xoolaInvocationHandler, XoolaChannelState xcs) {
-   }
+  /**
+   * @param connectionListener
+   */
+  public void addConnectionListener(XoolaConnectionListener connectionListener) {
+    this.handler.addConnectionListener(connectionListener);
+  }
 
-   @Override
-   public void connected(XoolaInvocationHandler xoolaInvocationHandler, XoolaChannelState xcs) {
-    latch.countDown();
-   }
-  });
-  latch.await();
- }
+  public String getId() {
+    return handler.getId();
+  }
+
+  public void start() {
+    this.handler.start();
+  }
+
+  public void stop() {
+    this.handler.stop();
+  }
+
+  public void waitForConnection() throws InterruptedException {
+    final CountDownLatch latch = new CountDownLatch(1);
+    addConnectionListener(new XoolaConnectionListener() {
+      @Override
+      public void disconnected(XoolaInvocationHandler xoolaInvocationHandler, XoolaChannelState xcs) {
+      }
+
+      @Override
+      public void connected(XoolaInvocationHandler xoolaInvocationHandler, XoolaChannelState xcs) {
+        latch.countDown();
+      }
+    });
+    latch.await();
+  }
 }

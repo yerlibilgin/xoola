@@ -5,6 +5,7 @@ import java.util.Properties;
 import org.interop.xoola.exception.XCommunicationException;
 import org.interop.xoola.tcpcom.connmanager.client.NettyClient;
 import org.interop.xoola.transport.Invocation;
+import org.interop.xoola.util.ObjectUtils;
 
 public class XoolaClientInvocationHandler extends XoolaInvocationHandler {
 
@@ -14,7 +15,7 @@ public class XoolaClientInvocationHandler extends XoolaInvocationHandler {
   public XoolaClientInvocationHandler(Properties properties) {
     super(properties);
     this.nettyClient = new NettyClient(properties, this);
-    this.id = properties.getProperty(XoolaProperty.CLIENTID, "xoolaClient");
+    this.id = ObjectUtils.getOrDefault(properties.get(XoolaProperty.CLIENTID), "xoolaClient");
   }
 
   @Override

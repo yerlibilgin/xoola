@@ -34,7 +34,7 @@ public class NettyServer extends XoolaNettyHandler {
   public NettyServer(Properties properties, XoolaInvocationHandler xoolaHandler) {
     super(properties, xoolaHandler);
 
-    String classLoaderProviderClassName = properties.getProperty(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
+    String classLoaderProviderClassName = (String) properties.get(XoolaProperty.CLASS_LOADER_PROVIDER_CLASS);
     if (classLoaderProviderClassName != null) {
       try {
         this.provider = (IClassLoaderProvider) Thread.currentThread().getContextClassLoader().loadClass(classLoaderProviderClassName).newInstance();
@@ -79,7 +79,7 @@ public class NettyServer extends XoolaNettyHandler {
     // Create channel
     try {
       this.acceptor = this.bootstrap.bind(new InetSocketAddress(this.serverPort));
-      LOGGER.info("Server bound to *:" + this.serverPort + " " + this.acceptor);
+      LOGGER.info("Server bound to *:" + this.serverPort);
       return true;
     } catch (ChannelException ex) {
       ex.printStackTrace();

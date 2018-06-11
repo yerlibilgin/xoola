@@ -22,9 +22,6 @@ package org.interop.xoola.core;
  * @author muhammet
  */
 public interface XoolaProperty {
-   /**
-    * Default value: {@link XoolaPropertyDefaults#MODE}
-    */
    String MODE = "MODE";
    /**
     * Default value: {@link XoolaPropertyDefaults#HOST}

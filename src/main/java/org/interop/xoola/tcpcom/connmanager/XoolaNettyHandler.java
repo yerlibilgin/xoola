@@ -19,9 +19,7 @@
 package org.interop.xoola.tcpcom.connmanager;
 
 import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
 import org.apache.log4j.Logger;
 import org.interop.xoola.core.XoolaInvocationHandler;
 import org.interop.xoola.core.XoolaProperty;
@@ -32,6 +30,7 @@ import org.interop.xoola.transport.Response;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.interop.xoola.util.ObjectUtils;
 
 /**
  * @author dogan, muhammet
@@ -42,15 +41,15 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   public XoolaInvocationHandler invocationHandler;
   protected int serverPort;
   private String serverId;
-  protected long responseTimeout;
-  protected long handshakeTimeout;
+  protected int responseTimeout;
+  protected int handshakeTimeout;
 
   public XoolaNettyHandler(Properties properties, XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
-    this.serverPort = Integer.parseInt(properties.getProperty(XoolaProperty.PORT, XoolaPropertyDefaults.PORT));
-    this.serverId = properties.getProperty(XoolaProperty.SERVERID, XoolaPropertyDefaults.SERVERID);
-    this.responseTimeout = Long.parseLong(properties.getProperty(XoolaProperty.NETWORK_RESPONSE_TIMEOUT, XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT));
-    this.handshakeTimeout = Long.parseLong(properties.getProperty(XoolaProperty.HANDSHAKE_TIMEOUT, XoolaPropertyDefaults.HANDSHAKE_TIMEOUT));
+    this.serverPort = ObjectUtils.getOrDefault(properties.get(XoolaProperty.PORT), XoolaPropertyDefaults.PORT);
+    this.serverId = ObjectUtils.getOrDefault(properties.get(XoolaProperty.SERVERID), XoolaPropertyDefaults.SERVERID);
+    this.responseTimeout = ObjectUtils.getOrDefault(properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
+    this.handshakeTimeout = ObjectUtils.getOrDefault(properties.get(XoolaProperty.HANDSHAKE_TIMEOUT), XoolaPropertyDefaults.HANDSHAKE_TIMEOUT);
   }
 
   final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -102,4 +101,6 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   public abstract void start();
 
   public abstract void stop();
+
+
 }

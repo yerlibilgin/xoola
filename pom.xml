@@ -1,62 +1,78 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.beybunproject</groupId>
-  <artifactId>xoola</artifactId>
-  <version>1.3.0</version>
-  <name>xoola</name>
+   <groupId>org.beybunproject</groupId>
+   <artifactId>xoola</artifactId>
+   <version>1.3.1</version>
+   <name>xoola</name>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.3.2</version>
+            <configuration>
+               <source>1.6</source>
+               <target>1.6</target>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>attach-sources</id>
+                  <goals>
+                     <goal>jar</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
 
 
-  <distributionManagement>
-    <repository>
-      <id>eidrepo</id>
-      <url>http://mindertestbed.org:8081/nexus/content/repositories/releases</url>
-    </repository>
-
-    <snapshotRepository>
-      <id>snapshots</id>
-      <url>http://mindertestbed.org:8081/nexus/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   </properties>
 
 
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.10</version>
-      <type>jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-    </dependency>
-    <dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>4.1.4.Final</version>
-    </dependency>
-    <dependency>
-      <groupId>com.jcraft</groupId>
-      <artifactId>jzlib</artifactId>
-      <version>1.1.3</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+   <distributionManagement>
+      <repository>
+         <id>releases</id>
+         <url>http://git.bilgem.tubitak.gov.tr:8081/nexus/content/repositories/releases</url>
+      </repository>
+
+      <snapshotRepository>
+         <id>snapshots</id>
+         <url>http://git.bilgem.tubitak.gov.tr:8081/nexus/content/repositories/snapshots</url>
+      </snapshotRepository>
+   </distributionManagement>
+
+   <dependencies>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>4.10</version>
+         <type>jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>log4j</groupId>
+         <artifactId>log4j</artifactId>
+         <version>1.2.16</version>
+      </dependency>
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-all</artifactId>
+         <version>4.1.4.Final</version>
+      </dependency>
+      <dependency>
+         <groupId>com.jcraft</groupId>
+         <artifactId>jzlib</artifactId>
+         <version>1.1.3</version>
+         <scope>test</scope>
+      </dependency>
+   </dependencies>
 </project>
