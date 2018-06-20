@@ -5,3 +5,5 @@ target
 *.jar
 xoola.log.*
 *.iml
+.idea
+*.iml
