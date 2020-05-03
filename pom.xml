@@ -63,11 +63,14 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.7.25</version>
     </dependency>
+    
+    <!-- updated for CVE-2019-16869 -->
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
-      <version>4.1.4.Final</version>
+      <version>[4.1.42,)</version>
     </dependency>
+
     <dependency>
       <groupId>com.jcraft</groupId>
       <artifactId>jzlib</artifactId>
