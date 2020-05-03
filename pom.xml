@@ -4,7 +4,7 @@
 
   <groupId>gov.tubitak</groupId>
   <artifactId>xoola</artifactId>
-  <version>1.3.4</version>
+  <version>1.3.4-SNAPSHOT</version>
   <name>xoola</name>
 
   <build>
@@ -38,17 +38,33 @@
   </properties>
 
 
-  <distributionManagement>
-    <repository>
-      <id>releases</id>
-      <url>http://git.bilgem.tubitak.gov.tr:8081/nexus/content/repositories/releases</url>
-    </repository>
+  <licenses>
+    <license>
+      <name>Apache 2</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-    <snapshotRepository>
-      <id>snapshots</id>
-      <url>http://git.bilgem.tubitak.gov.tr:8081/nexus/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
+  <scm>
+    <connection>scm:git:git@github.com:yerlibilgin/xoola.git</connection>
+    <developerConnection>scm:git:git@github.com:yerlibilgin/xoola.git</developerConnection>
+    <url>http://github.com/yerlibilgin/xoola</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <organization>
+    <name>TUBITAK BILGEM</name>
+    <url>https://bilgem.tubitak.gov.tr/</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <id>myildiz83</id>
+      <name>Muhammet YILDIZ</name>
+      <email>myildiz83(at)gmail.com</email>
+    </developer>
+  </developers>
 
   <dependencies>
     <dependency>
@@ -77,6 +93,7 @@
       <version>1.1.3</version>
       <scope>test</scope>
     </dependency>
+    
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>

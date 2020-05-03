@@ -7,3 +7,7 @@ xoola.log.*
 *.iml
 .idea
 *.iml
+.classpath
+.project
+.settings
+.vscode
