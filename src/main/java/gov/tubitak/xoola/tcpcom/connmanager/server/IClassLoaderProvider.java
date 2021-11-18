@@ -20,7 +20,7 @@ package gov.tubitak.xoola.tcpcom.connmanager.server;
  * A provider interface to be used by the server to match the proxies
  * to corresponding classes
  *
- * @author: yerlibilgin
+ * @author yerlibilgin
  */
 public interface IClassLoaderProvider {
 
