@@ -27,7 +27,7 @@ public class XoolaServerInvocationHandler extends XoolaInvocationHandler {
 
  @Override
  public < T > T get(Class < T > interfaze, String remoteName, String remoteObjectName, boolean async) {
-  LOGGER.info("Get remote interface for client: " + remoteName + " Object: " + remoteObjectName);
+  LOGGER.info("Get remote interface for client: {}, object: {}", remoteName , remoteObjectName);
   if (remoteObjectName == null && !nettyServer.getServerRegistry().hasUser(remoteObjectName))
    throw new XIOException("Remote client not connected");
 

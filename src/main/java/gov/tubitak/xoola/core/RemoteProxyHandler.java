@@ -55,7 +55,10 @@ public class RemoteProxyHandler implements java.lang.reflect.InvocationHandler {
   */
  @Override
  public Object invoke(Object proxy, final Method m, final Object[] args) {
-  LOGGER.debug("invoke " + remoteName);
+  if(LOGGER.isDebugEnabled()) {
+   LOGGER.debug("Invoke {}, async: {}, method name: {}", remoteName, async, m.getName());
+  }
+
   if (async) {
    Runnable r = new Runnable() {
     @Override
@@ -79,8 +82,7 @@ public class RemoteProxyHandler implements java.lang.reflect.InvocationHandler {
    }
    try {
     Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
-    Object remote = handler.invokeRemote(remoteName, invocation);
-    return remote;
+    return handler.invokeRemote(remoteName, invocation);
    } catch (Exception e) {
     throw new XCommunicationException(e);
    }

@@ -22,6 +22,7 @@ import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.exception.XInvocationException;
 import gov.tubitak.xoola.transport.Invocation;
 import gov.tubitak.xoola.transport.Response;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import gov.tubitak.xoola.exception.XCommunicationException;
@@ -43,6 +45,7 @@ import gov.tubitak.xoola.util.ObjectUtils;
 public abstract class XoolaInvocationHandler extends Observable implements CancellableInvocation {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(XoolaInvocationHandler.class);
+
   public class ObserverWrapper implements Observer {
 
     private final XoolaConnectionListener connectionStateListener;
@@ -54,7 +57,8 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     @Override
     public void update(Observable o, Object arg) {
       XoolaChannelState xcs = (XoolaChannelState) arg;
-      LOGGER.debug("update connection observer (" + Boolean.TRUE.equals(xcs.connected) + ")");
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("update connection observer {}", Boolean.TRUE.equals(xcs.connected));
       if (xcs.connected) {
         this.connectionStateListener.connected(XoolaInvocationHandler.this, xcs);
       } else {
@@ -82,12 +86,9 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * Invokes the method of the given remote object with args params.
    *
    * @return the result of the remote operation
-   * @throws XCommunicationException
-   *     if the invocation doesn't finish in the given time
-   * @throws XInvocationException
-   *     if a remote error occurs.
-   * @throws IllegalArgumentException
-   *     if a null result comes.
+   * @throws XCommunicationException  if the invocation doesn't finish in the given time
+   * @throws XInvocationException     if a remote error occurs.
+   * @throws IllegalArgumentException if a null result comes.
    */
   public synchronized Object invokeRemote(String remoteClientName, Invocation message) {
     synchronized (this.mutex) {
@@ -163,7 +164,7 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
       }
 
     } else {
-      LOGGER.warn("No registered object named \"" + invocation.objectName + "\"");
+      LOGGER.warn("No registered object named {}", invocation.objectName);
       response.returnValue = new UnsupportedOperationException("No registered object named \"" + invocation.objectName + "\"");
     }
     return response;
@@ -218,7 +219,7 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
   public void receiveResponse(Response receipt) {
     this.receipt = receipt;
     synchronized (this.mutex) {
-      this.mutex.notify();
+      this.mutex.notifyAll();
     }
   }
 
@@ -245,12 +246,9 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * Registers an object with <code>name</code> as a service. The remote client
    * will use that name to call a method of that object
    *
-   * @param name
-   *     Name for remote call
-   * @param object
-   *     The object (as a remote service)
-   * @throws IllegalArgumentException
-   *     If an object is already registered with the given name
+   * @param name   Name for remote call
+   * @param object The object (as a remote service)
+   * @throws IllegalArgumentException If an object is already registered with the given name
    */
   public void registerObject(String name, Object object) {
     if (this.NAMES_MAP.containsKey(name)) {
@@ -287,6 +285,12 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
 
   @SuppressWarnings("unchecked")
   protected <T> T createProxyForClass(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
+    if (LOGGER.isDebugEnabled())
+      LOGGER.debug("createProxyForClass: {}, remoteName: {}, remoteObjectName:{}, async:{}"
+          , interfaze.getName()
+          , remoteName
+          , remoteObjectName
+          , async);
     return (T) Proxy.newProxyInstance(interfaze.getClassLoader(), new Class<?>[]{interfaze}, new RemoteProxyHandler(remoteName,
         remoteObjectName, this, async));
   }

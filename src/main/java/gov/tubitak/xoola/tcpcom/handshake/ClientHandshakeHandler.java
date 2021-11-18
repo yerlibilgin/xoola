@@ -207,7 +207,7 @@ public class ClientHandshakeHandler extends ChannelDuplexHandler {
           } catch (Exception ignored) {
           }
 
-          ClientHandshakeHandler.this.nettyClient.invocationHandler.connected(null);
+          ClientHandshakeHandler.this.nettyClient.invocationHandler.connected(nettyClient.getServerId());
         }
       }).start();
     } else {

@@ -4,7 +4,6 @@ import gov.tubitak.xoola.transport.Invocation;
 import java.util.Properties;
 import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.tcpcom.connmanager.client.NettyClient;
-import gov.tubitak.xoola.transport.Invocation;
 import gov.tubitak.xoola.util.ObjectUtils;
 
 public class XoolaClientInvocationHandler extends XoolaInvocationHandler {

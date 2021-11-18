@@ -132,6 +132,9 @@ public class NettyServer extends XoolaNettyHandler {
   }
 
   public void addClient(String receivedClientId, Channel channel) {
+      if (LOGGER.isDebugEnabled()){
+          LOGGER.debug("addClient-> receiveClientId: {}", receivedClientId);
+      }
     serverRegistry.addUser(receivedClientId, channel);
   }
 
@@ -145,8 +148,11 @@ public class NettyServer extends XoolaNettyHandler {
 
   private void notifyClientDisconnect(ChannelHandlerContext ctx) {
     Channel channel = ctx.channel();
+    LOGGER.debug("notifyClientDisconnect");
     if (this.invocationHandler != null && serverRegistry.hasChannel(channel)) {
       String remoteId = serverRegistry.getUser(channel);
+      if (LOGGER.isDebugEnabled())
+        LOGGER.debug("notifyClientDisconnect remoteId: {}", remoteId);
       serverRegistry.removeUser(remoteId);
       this.invocationHandler.disconnected(remoteId);
     }

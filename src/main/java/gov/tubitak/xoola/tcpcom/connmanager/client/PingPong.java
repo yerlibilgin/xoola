@@ -1,7 +1,6 @@
 package gov.tubitak.xoola.tcpcom.connmanager.client;
 
 import gov.tubitak.xoola.transport.TransportObject;
-import gov.tubitak.xoola.transport.TransportObject;
 
 public class PingPong implements TransportObject {
  private static final long serialVersionUID = 6757028768408150419L;

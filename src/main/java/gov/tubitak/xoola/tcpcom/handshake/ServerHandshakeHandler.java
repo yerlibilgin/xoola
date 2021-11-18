@@ -79,8 +79,8 @@ public class ServerHandshakeHandler extends ChannelDuplexHandler {
         ServerRegistry registry = nettyServer.getServerRegistry();
         if (!registry.isAllowed(receivedClientId)) {
           errorMessage = "The client id is not in the registry";
-          //} else if (registry.hasUser(receivedClientId)) {
-          //  errorMessage = "Handshake failed: '" + receivedClientId + "' is already connected";
+          } else if (registry.hasUser(receivedClientId)) {
+            errorMessage = "Handshake failed: '" + receivedClientId + "' is already connected";
         } else {
           challengeSuccess(ctx, receivedClientId);
           return;

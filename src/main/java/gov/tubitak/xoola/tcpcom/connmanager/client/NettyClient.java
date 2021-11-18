@@ -118,8 +118,7 @@ public class NettyClient extends XoolaNettyHandler {
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-    LOGGER.warn("Exception " + cause.getCause().getMessage());
-    LOGGER.error(cause.getMessage(), cause);
+    LOGGER.warn(cause.getMessage(), cause);
     cause.getCause().printStackTrace();
   }
 
