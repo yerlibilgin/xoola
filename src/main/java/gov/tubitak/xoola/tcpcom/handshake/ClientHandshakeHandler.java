@@ -158,7 +158,7 @@ public class ClientHandshakeHandler extends ChannelDuplexHandler {
               if (!ClientHandshakeHandler.this.handshakeComplete.get()) {
                 // If handshake wasn't completed meanwhile,
                 // time to mark the handshake as having failed.
-                LOGGER.info("Handshake timeout checker: timed LOGGER.info, killing connection.");
+                LOGGER.info("Handshake timeout checker: timed out, killing connection.");
                 ClientHandshakeHandler.this.fireHandshakeFailed(ctx);
               } else {
                 // Informative output; the handshake was
