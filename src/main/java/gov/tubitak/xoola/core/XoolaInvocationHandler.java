@@ -1,20 +1,17 @@
 /*
- * XoolA is a remote method call bridge between java and dotnet platforms.
- * Copyright (C) 2010 Muhammet YILDIZ, Doğan ERSÖZ
+ * Copyright 2021-TUBITAK BILGEM
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package gov.tubitak.xoola.core;
 
@@ -40,16 +37,26 @@ import gov.tubitak.xoola.transport.Response;
 import gov.tubitak.xoola.util.ObjectUtils;
 
 /**
- * @author dogan, muhammet
+ * The base invocation handler for a client request
+ *
+ * @author yerlibilgin
  */
 public abstract class XoolaInvocationHandler extends Observable implements CancellableInvocation {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(XoolaInvocationHandler.class);
 
+  /**
+   * The type Observer wrapper.
+   */
   public class ObserverWrapper implements Observer {
 
     private final XoolaConnectionListener connectionStateListener;
 
+    /**
+     * Instantiates a new Observer wrapper.
+     *
+     * @param connectionStateListener the connection state listener
+     */
     public ObserverWrapper(XoolaConnectionListener connectionStateListener) {
       this.connectionStateListener = connectionStateListener;
     }
@@ -67,6 +74,9 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     }
   }
 
+  /**
+   * The Names map.
+   */
   final HashMap<String, Object> NAMES_MAP = new HashMap<String, Object>();
   private AtomicInteger invocationCounter;
 
@@ -75,7 +85,9 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
   private Object mutex;
 
   /**
-   * @param properties
+   * Instantiates a new Xoola invocation handler.
+   *
+   * @param properties the properties
    */
   public XoolaInvocationHandler(Properties properties) {
     this.properties = properties;
@@ -85,6 +97,8 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
   /**
    * Invokes the method of the given remote object with args params.
    *
+   * @param remoteClientName the remote client name
+   * @param message          the message
    * @return the result of the remote operation
    * @throws XCommunicationException  if the invocation doesn't finish in the given time
    * @throws XInvocationException     if a remote error occurs.
@@ -128,8 +142,20 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     }
   }
 
+  /**
+   * Send message.
+   *
+   * @param remoteName the remote name
+   * @param message    the message
+   */
   protected abstract void sendMessage(String remoteName, Invocation message);
 
+  /**
+   * Receive invocation object.
+   *
+   * @param invocation the invocation
+   * @return the object
+   */
   public Object receiveInvocation(Invocation invocation) {
     Response response = new Response();
     if (this.NAMES_MAP.containsKey(invocation.objectName)) {
@@ -216,6 +242,11 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     return type.getName().equals(primitive) && type2.getName().equals(wrapper);
   }
 
+  /**
+   * Receive response.
+   *
+   * @param receipt the receipt
+   */
   public void receiveResponse(Response receipt) {
     this.receipt = receipt;
     synchronized (this.mutex) {
@@ -223,10 +254,20 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     }
   }
 
+  /**
+   * Add connection listener.
+   *
+   * @param connectionStateListener the connection state listener
+   */
   public void addConnectionListener(XoolaConnectionListener connectionStateListener) {
     this.addObserver(new ObserverWrapper(connectionStateListener));
   }
 
+  /**
+   * Consume receipt response.
+   *
+   * @return the response
+   */
   protected synchronized Response consumeReceipt() {
     try {
       return this.receipt;
@@ -236,7 +277,9 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
   }
 
   /**
-   * @param name
+   * Unregister.
+   *
+   * @param name the name
    */
   public void unregister(String name) {
     this.NAMES_MAP.remove(name);
@@ -257,32 +300,88 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
     this.NAMES_MAP.put(name, object);
   }
 
+  /**
+   * Connected.
+   *
+   * @param remoteId the remote id
+   */
   public void connected(String remoteId) {
     LOGGER.debug("connected(" + remoteId + ")");
     this.setChanged();
     this.notifyObservers(new XoolaChannelState(remoteId, true));
   }
 
+  /**
+   * Disconnected.
+   *
+   * @param remoteId the remote id
+   */
   public void disconnected(String remoteId) {
     LOGGER.debug("disconnected(" + remoteId + ")");
     this.setChanged();
     this.notifyObservers(new XoolaChannelState(remoteId, false));
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteObjectName the remote object name
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteObjectName) {
     return get(interfaze, null, remoteObjectName, false);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteObjectName the remote object name
+   * @param async            the async
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteObjectName, boolean async) {
     return get(interfaze, null, remoteObjectName, async);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteName       the remote name
+   * @param remoteObjectName the remote object name
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName) {
     return get(interfaze, remoteName, remoteObjectName, false);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteName       the remote name
+   * @param remoteObjectName the remote object name
+   * @param async            the async
+   * @return the t
+   */
   public abstract <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async);
 
+  /**
+   * Create proxy for class t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteName       the remote name
+   * @param remoteObjectName the remote object name
+   * @param async            the async
+   * @return the t
+   */
   @SuppressWarnings("unchecked")
   protected <T> T createProxyForClass(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
     if (LOGGER.isDebugEnabled())
@@ -295,9 +394,20 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
         remoteObjectName, this, async));
   }
 
+  /**
+   * Start.
+   */
   public abstract void start();
 
+  /**
+   * Stop.
+   */
   public abstract void stop();
 
+  /**
+   * Gets id.
+   *
+   * @return the id
+   */
   public abstract String getId();
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2021-TUBITAK BILGEM
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package gov.tubitak.xoola.tcpcom.connmanager.server;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -15,8 +30,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+
 import java.net.InetSocketAddress;
 import java.util.Properties;
+
 import gov.tubitak.xoola.core.XoolaInvocationHandler;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.exception.XIOException;
@@ -26,18 +43,32 @@ import gov.tubitak.xoola.tcpcom.handshake.ServerHandshakeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Represents the server side of the connection
+ *
+ * @author yerlibilgin
+ */
 @ChannelHandler.Sharable
 public class NettyServer extends XoolaNettyHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(NettyServer.class);
-  private static final int _1M = 1024*1024;
+  private static final int _1M = 1024 * 1024;
   private ServerBootstrap bootstrap;
   private ChannelFuture acceptor;
   private ServerRegistry serverRegistry;
   private IClassLoaderProvider provider;
- private  EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+  private EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+  /**
+   * The Worker group.
+   */
   EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-  // private final ServerListener listener;
+  /**
+   * Instantiates a new Netty server.
+   *
+   * @param properties   the properties
+   * @param xoolaHandler the xoola handler
+   */
+// private final ServerListener listener;
   public NettyServer(Properties properties, XoolaInvocationHandler xoolaHandler) {
     super(properties, xoolaHandler);
 
@@ -76,7 +107,7 @@ public class NettyServer extends XoolaNettyHandler {
       @Override
       public void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline().addLast(new ObjectEncoder());
-        ch.pipeline().addLast(new ObjectDecoder(101*_1M, ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
+        ch.pipeline().addLast(new ObjectDecoder(101 * _1M, ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
         ch.pipeline().addLast(new ChannelGuard());
         ch.pipeline().addLast(new ServerHandshakeHandler(NettyServer.this, handshakeTimeout));
         ch.pipeline().addLast(NettyServer.this);
@@ -131,17 +162,33 @@ public class NettyServer extends XoolaNettyHandler {
     throw new XIOException("Remote client not connected");
   }
 
+  /**
+   * Add client.
+   *
+   * @param receivedClientId the received client id
+   * @param channel          the channel
+   */
   public void addClient(String receivedClientId, Channel channel) {
-      if (LOGGER.isDebugEnabled()){
-          LOGGER.debug("addClient-> receiveClientId: {}", receivedClientId);
-      }
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("addClient-> receiveClientId: {}", receivedClientId);
+    }
     serverRegistry.addUser(receivedClientId, channel);
   }
 
+  /**
+   * Gets server registry.
+   *
+   * @return the server registry
+   */
   public ServerRegistry getServerRegistry() {
     return serverRegistry;
   }
 
+  /**
+   * Sets server registry.
+   *
+   * @param serverRegistry the server registry
+   */
   public void setServerRegistry(ServerRegistry serverRegistry) {
     this.serverRegistry = serverRegistry;
   }

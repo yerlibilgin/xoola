@@ -1,20 +1,17 @@
 /*
- * XoolA is a remote method call bridge between java and dotnet platforms.
- * Copyright (C) 2010 Muhammet YILDIZ, Doğan ERSÖZ
+ * Copyright 2021-TUBITAK BILGEM
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package gov.tubitak.xoola.transport;
 
@@ -22,13 +19,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author dogan, muhammet
+ * Represents a remote invocation
  *
+ * @author yerlibilgin
  */
 public class Invocation implements TransportObject {
   private static final Logger LOGGER = LoggerFactory.getLogger(Invocation.class);
   private static final long serialVersionUID = -199341454272572550L;
 
+  /**
+   * Create method call invocation.
+   *
+   * @param objectName the object name
+   * @param methodName the method name
+   * @param args       the args
+   * @return the invocation
+   */
   public static Invocation createMethodCall(String objectName, String methodName, Object... args) {
     return new Invocation(objectName, methodName, InvocationType.CALL, args);
   }
@@ -36,37 +42,45 @@ public class Invocation implements TransportObject {
   /**
    * creates a copy of the given transport object
    *
-   * @param object
-   * @return
+   * @param object the object
+   * @return invocation invocation
    */
   public static Invocation copy(Invocation object) {
     return new Invocation(object.objectName, object.methodName, object.type, object.params);
   }
 
   /**
-   * @return
+   * Create empty object invocation.
+   *
+   * @return invocation invocation
    */
   public static Invocation createEmptyObject() {
     return new Invocation(null, null, null, null);
   }
 
+  /**
+   * The Object name.
+   */
   public String objectName;
+  /**
+   * The Method name.
+   */
   public String methodName;
+  /**
+   * The Type.
+   */
   public InvocationType type;
+  /**
+   * The Params.
+   */
   public Object[] params;
 
   /**
-   *
+   * Instantiates a new Invocation.
    */
   public Invocation() {
   }
 
-  /**
-   * @param objectName
-   * @param methodName
-   * @param type
-   * @param params
-   */
   private Invocation(String objectName, String methodName, InvocationType type, Object[] params) {
     this.objectName = objectName;
     this.methodName = methodName;

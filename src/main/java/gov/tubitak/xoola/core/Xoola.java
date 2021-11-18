@@ -1,35 +1,40 @@
 /*
- * XoolA is a remote method call bridge between java and dotnet platforms.
- * Copyright (C) 2010 Muhammet YILDIZ, Doğan ERSÖZ
+ * Copyright 2021-TUBITAK BILGEM
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package gov.tubitak.xoola.core;
 
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * @author dogan, muhammet
+ * The main entry point of the Xoola System
+ *
+ * @author yerlibilgin
  */
 public class Xoola {
 
+  /**
+   * The Handler.
+   */
   public XoolaInvocationHandler handler;
 
   /**
-   * @param xoolaHandler
+   * Instantiates a new Xoola.
+   *
+   * @param xoolaHandler the xoola handler
    */
   Xoola(XoolaInvocationHandler xoolaHandler) {
     this.handler = xoolaHandler;
@@ -44,25 +49,60 @@ public class Xoola {
 
   /**
    * This method is used to get a proxy for the given remote object.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteObjectName the remote object name
+   * @return the t
    */
   public <T> T get(Class<T> interfaze, String remoteObjectName) {
     return (T) this.handler.get(interfaze, remoteObjectName);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteObjectName the remote object name
+   * @param async            the async
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteObjectName, boolean async) {
     return (T) this.handler.get(interfaze, remoteObjectName, async);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteName       the remote name
+   * @param remoteObjectName the remote object name
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName) {
     return (T) this.handler.get(interfaze, remoteName, remoteObjectName);
   }
 
+  /**
+   * Get t.
+   *
+   * @param <T>              the type parameter
+   * @param interfaze        the interfaze
+   * @param remoteName       the remote name
+   * @param remoteObjectName the remote object name
+   * @param async            the async
+   * @return the t
+   */
   public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
     return (T) this.handler.get(interfaze, remoteName, remoteObjectName, async);
   }
 
   /**
    * Check {@link XoolaInvocationHandler#unregister(String name)}
+   *
+   * @param name the name
    */
   public void unregisterObject(String name) {
     this.handler.unregister(name);
@@ -70,21 +110,26 @@ public class Xoola {
 
   /**
    * Check {@link XoolaInvocationHandler#registerObject(String name, Object object)}
+   *
+   * @param name   the name
+   * @param object the object
    */
   public void registerObject(String name, Object object) {
     this.handler.registerObject(name, object);
   }
 
   /**
-   *
+   * Close.
    */
   public void close() {
     this.handler.stop();
   }
 
   /**
-   * @param properties
-   * @return
+   * Init xoola.
+   *
+   * @param properties the properties
+   * @return xoola
    */
   public static Xoola init(Properties properties) {
 
@@ -124,24 +169,42 @@ public class Xoola {
   }
 
   /**
-   * @param connectionListener
+   * Add connection listener.
+   *
+   * @param connectionListener the connection listener
    */
   public void addConnectionListener(XoolaConnectionListener connectionListener) {
     this.handler.addConnectionListener(connectionListener);
   }
 
+  /**
+   * Gets id.
+   *
+   * @return the id
+   */
   public String getId() {
     return handler.getId();
   }
 
+  /**
+   * Start.
+   */
   public void start() {
     this.handler.start();
   }
 
+  /**
+   * Stop.
+   */
   public void stop() {
     this.handler.stop();
   }
 
+  /**
+   * Wait for connection.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   public void waitForConnection() throws InterruptedException {
     final CountDownLatch latch = new CountDownLatch(1);
     addConnectionListener(new XoolaConnectionListener() {

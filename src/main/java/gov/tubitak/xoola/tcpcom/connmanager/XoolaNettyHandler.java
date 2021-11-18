@@ -38,17 +38,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author dogan, muhammet
+ * Netty transport handler
+ *
+ * @author yerlibilgin
  */
 public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(XoolaNettyHandler.class);
-  // Xoola
+  /**
+   * The Invocation handler.
+   */
+// Xoola
   public XoolaInvocationHandler invocationHandler;
+  /**
+   * The Server port.
+   */
   protected int serverPort;
   private String serverId;
+  /**
+   * The Response timeout.
+   */
   protected int responseTimeout;
+  /**
+   * The Handshake timeout.
+   */
   protected int handshakeTimeout;
 
+  /**
+   * Instantiates a new Xoola netty handler.
+   *
+   * @param properties the properties
+   * @param handler    the handler
+   */
   public XoolaNettyHandler(Properties properties, XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
     this.serverPort = ObjectUtils.getOrDefault(properties.get(XoolaProperty.PORT), XoolaPropertyDefaults.PORT);
@@ -57,6 +77,9 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
     this.handshakeTimeout = ObjectUtils.getOrDefault(properties.get(XoolaProperty.HANDSHAKE_TIMEOUT), XoolaPropertyDefaults.HANDSHAKE_TIMEOUT);
   }
 
+  /**
+   * The Executor service.
+   */
   final ExecutorService executorService = Executors.newCachedThreadPool();
 
   @Override
@@ -80,6 +103,8 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   }
 
   /**
+   * Gets handler.
+   *
    * @return the handler
    */
   public XoolaInvocationHandler getHandler() {
@@ -87,24 +112,48 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
   }
 
   /**
+   * Sets handler.
+   *
    * @param handler the handler to set
    */
   public void setHandler(XoolaInvocationHandler handler) {
     this.invocationHandler = handler;
   }
 
+  /**
+   * Gets server id.
+   *
+   * @return the server id
+   */
   public String getServerId() {
     return serverId;
   }
 
+  /**
+   * Sets server id.
+   *
+   * @param serverId the server id
+   */
   public void setServerId(String serverId) {
     this.serverId = serverId;
   }
 
+  /**
+   * Send.
+   *
+   * @param id      the id
+   * @param message the message
+   */
   public abstract void send(String id, Object message);
 
+  /**
+   * Start.
+   */
   public abstract void start();
 
+  /**
+   * Stop.
+   */
   public abstract void stop();
 
 

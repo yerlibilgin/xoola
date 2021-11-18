@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021-TUBITAK BILGEM
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package gov.tubitak.xoola.tcpcom.connmanager.client;
 
 import gov.tubitak.xoola.core.XoolaInvocationHandler;
@@ -35,7 +51,9 @@ import gov.tubitak.xoola.util.ObjectUtils;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author dogan, muhammet
+ * The client side of the p2p connection.
+ *
+ * @author yerlibilgin
  */
 @ChannelHandler.Sharable
 public class NettyClient extends XoolaNettyHandler {
@@ -47,11 +65,26 @@ public class NettyClient extends XoolaNettyHandler {
   private InetSocketAddress remoteAddress;
   private int connectTimeout;
   private ChannelGuard channelGuard;
+  /**
+   * The Channel.
+   */
   protected Channel channel;
   private String clientId;
+  /**
+   * The Ping timeout.
+   */
   public int pingTimeout;
+  /**
+   * The Reconnect retry timeout.
+   */
   public int reconnectRetryTimeout;
 
+  /**
+   * Instantiates a new Netty client.
+   *
+   * @param properties   the properties
+   * @param xoolaHandler the xoola handler
+   */
   public NettyClient(Properties properties, XoolaInvocationHandler xoolaHandler) {
     super(properties, xoolaHandler);
     this.clientId = ObjectUtils.getOrDefault(properties.get(XoolaProperty.CLIENTID), XoolaPropertyDefaults.CLIENTID);
@@ -112,6 +145,11 @@ public class NettyClient extends XoolaNettyHandler {
     LOGGER.info("CLIENT - Stopped.");
   }
 
+  /**
+   * Is available boolean.
+   *
+   * @return the boolean
+   */
   public boolean isAvailable() {
     return this.channel != null && this.channel.isActive();
   }
@@ -131,6 +169,8 @@ public class NettyClient extends XoolaNettyHandler {
   }
 
   /**
+   * Gets channel.
+   *
    * @return the channel
    */
   public Channel getChannel() {
@@ -138,8 +178,9 @@ public class NettyClient extends XoolaNettyHandler {
   }
 
   /**
-   * @param channel
-   *     the channel to set
+   * Sets channel.
+   *
+   * @param channel the channel to set
    */
   public void setChannel(Channel channel) {
     this.channel = channel;
@@ -173,6 +214,11 @@ public class NettyClient extends XoolaNettyHandler {
     this.channel.writeAndFlush(message);
   }
 
+  /**
+   * Gets client id.
+   *
+   * @return the client id
+   */
   public String getClientId() {
     return clientId;
   }

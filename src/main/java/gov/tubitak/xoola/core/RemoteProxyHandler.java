@@ -1,91 +1,86 @@
 /*
- * XoolA is a remote method call bridge between java and dotnet platforms.
- * Copyright (C) 2010 Muhammet YILDIZ, Doğan ERSÖZ
+ * Copyright 2021-TUBITAK BILGEM
  *
- * This program is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package gov.tubitak.xoola.core;
 
 import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.transport.Invocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
-import org.slf4j.Logger;
-import gov.tubitak.xoola.exception.XCommunicationException;
-import gov.tubitak.xoola.transport.Invocation;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class only holds a name per remote object proxy. The rest is handled by
  * RemoteInvocationEndpoint.
  *
- * @author dogan, muhammet
- *
+ * @author yerlibilgin
  */
 public class RemoteProxyHandler implements java.lang.reflect.InvocationHandler {
- private static final Logger LOGGER = LoggerFactory.getLogger(RemoteProxyHandler.class);
- private final String remoteObjectName;
- private final XoolaInvocationHandler handler;
- private boolean async;
- private ExecutorService threadPool;
- private String remoteName;
+  private static final Logger LOGGER = LoggerFactory.getLogger(RemoteProxyHandler.class);
+  private final String remoteObjectName;
+  private final XoolaInvocationHandler handler;
+  private boolean async;
+  private ExecutorService threadPool;
+  private String remoteName;
 
- public RemoteProxyHandler(String remoteName, String remoteObjectName, XoolaInvocationHandler handler, boolean async) {
-  this.remoteName = remoteName;
-  this.remoteObjectName = remoteObjectName;
-  this.handler = handler;
-  this.async = async;
-  threadPool = java.util.concurrent.Executors.newCachedThreadPool();
- }
-
- /**
-  * @throws XCommunicationException
-  */
- @Override
- public Object invoke(Object proxy, final Method m, final Object[] args) {
-  if(LOGGER.isDebugEnabled()) {
-   LOGGER.debug("Invoke {}, async: {}, method name: {}", remoteName, async, m.getName());
+  public RemoteProxyHandler(String remoteName, String remoteObjectName, XoolaInvocationHandler handler, boolean async) {
+    this.remoteName = remoteName;
+    this.remoteObjectName = remoteObjectName;
+    this.handler = handler;
+    this.async = async;
+    threadPool = java.util.concurrent.Executors.newCachedThreadPool();
   }
 
-  if (async) {
-   Runnable r = new Runnable() {
-    @Override
-    public void run() {
-     if (!m.getName().equals("toString")) {
-      try {
-       Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
-       handler.invokeRemote(remoteName, invocation);
-      } catch (Exception e) {
-       LOGGER.error("Error ocurred during asynchronous call " + m + " [" + e.getMessage() + "]", e);
-      }
-     }
+  /**
+   * @throws XCommunicationException if an exception occurs during communication
+   */
+  @Override
+  public Object invoke(Object proxy, final Method m, final Object[] args) {
+    if (LOGGER.isDebugEnabled()) {
+      LOGGER.debug("Invoke {}, async: {}, method name: {}", remoteName, async, m.getName());
     }
-   };
 
-   threadPool.execute(r);
-   return null;
-  } else {
-   if (m.getName().equals("toString")) {
-    return "Remote" + proxy.getClass().getSimpleName() + "[" + remoteObjectName + "]";
-   }
-   try {
-    Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
-    return handler.invokeRemote(remoteName, invocation);
-   } catch (Exception e) {
-    throw new XCommunicationException(e);
-   }
+    if (async) {
+      Runnable r = new Runnable() {
+        @Override
+        public void run() {
+          if (!m.getName().equals("toString")) {
+            try {
+              Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
+              handler.invokeRemote(remoteName, invocation);
+            } catch (Exception e) {
+              LOGGER.error("Error ocurred during asynchronous call " + m + " [" + e.getMessage() + "]", e);
+            }
+          }
+        }
+      };
+
+      threadPool.execute(r);
+      return null;
+    } else {
+      if (m.getName().equals("toString")) {
+        return "Remote" + proxy.getClass().getSimpleName() + "[" + remoteObjectName + "]";
+      }
+      try {
+        Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
+        return handler.invokeRemote(remoteName, invocation);
+      } catch (Exception e) {
+        throw new XCommunicationException(e);
+      }
+    }
   }
- }
 }
