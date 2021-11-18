@@ -9,6 +9,8 @@
     A fast and lightweight remote method call library based on java and netty
   </description>
 
+  <url>http://github.com/yerlibilgin/xoola</url>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
