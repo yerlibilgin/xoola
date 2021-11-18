@@ -21,6 +21,7 @@ package gov.tubitak.xoola.java.test;
 import java.io.FileReader;
 import java.util.Properties;
 import java.util.Random;
+
 import gov.tubitak.xoola.core.Xoola;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaTierMode;
@@ -99,7 +100,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test1M() throws InterruptedException {
+  public void test1M() {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
     byte[] b = new byte[1 * _1M];
     new Random().nextBytes(b);
@@ -112,7 +113,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test5M() throws InterruptedException {
+  public void test5M() {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
     byte[] b = new byte[5 * _1M];
     new Random().nextBytes(b);
@@ -125,7 +126,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test10M() throws InterruptedException {
+  public void test10M() {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
     byte[] b = new byte[10 * _1M];
     new Random().nextBytes(b);
@@ -138,7 +139,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test25M() throws InterruptedException {
+  public void test25M() {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
     byte[] b = new byte[25 * _1M];
     new Random().nextBytes(b);
@@ -150,7 +151,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test50M() throws InterruptedException {
+  public void test50M() {
     ILargeMessageService imf = client.get(ILargeMessageService.class, "multiFace");
     byte[] b = new byte[50 * _1M];
     new Random().nextBytes(b);
@@ -162,7 +163,7 @@ public class TestXoolaLargeMessage {
   }
 
   @Test
-  public void test100M() throws InterruptedException {
+  public void test100M() {
 
     long a = System.currentTimeMillis();
 
@@ -175,7 +176,7 @@ public class TestXoolaLargeMessage {
     imf.transfer(b, 0, b.length);
 
 
-    LOGGER.debug("Time " + (end-a));
+    LOGGER.debug("Time " + (end - a));
     org.junit.Assert.assertArrayEquals(multiFace.buffer, b);
   }
 

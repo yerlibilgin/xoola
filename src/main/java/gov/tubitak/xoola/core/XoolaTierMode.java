@@ -17,7 +17,7 @@
 package gov.tubitak.xoola.core;
 
 /**
- * @author muhammet
+ * @author yerlibilgin
  */
 public interface XoolaTierMode {
   String CLIENT = "CLIENT";

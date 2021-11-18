@@ -26,6 +26,31 @@ import java.util.concurrent.CountDownLatch;
  */
 public class Xoola {
 
+
+  /**
+   * Init xoola.
+   *
+   * @param properties the properties
+   * @return xoola
+   */
+  public static Xoola init(Properties properties) {
+
+    prepareParameters(properties);
+
+    Object tierMode = properties.get(XoolaProperty.MODE);
+    if (tierMode == null) {
+      throw new IllegalArgumentException("Xoola properties do not contain MODE");
+    }
+    if (tierMode.equals(XoolaTierMode.CLIENT)) {
+      return new Xoola(new XoolaClientInvocationHandler(properties));
+    }
+    if (tierMode.equals(XoolaTierMode.SERVER)) {
+      return new Xoola(new XoolaServerInvocationHandler(properties));
+    }
+    throw new IllegalArgumentException("Illegal Xoola tier mode " + tierMode);
+  }
+
+
   /**
    * The Handler.
    */
@@ -123,29 +148,6 @@ public class Xoola {
    */
   public void close() {
     this.handler.stop();
-  }
-
-  /**
-   * Init xoola.
-   *
-   * @param properties the properties
-   * @return xoola
-   */
-  public static Xoola init(Properties properties) {
-
-    prepareParameters(properties);
-
-    Object tierMode = properties.get(XoolaProperty.MODE);
-    if (tierMode == null) {
-      throw new IllegalArgumentException("Xoola properties do not contain MODE");
-    }
-    if (tierMode.equals(XoolaTierMode.CLIENT)) {
-      return new Xoola(new XoolaClientInvocationHandler(properties));
-    }
-    if (tierMode.equals(XoolaTierMode.SERVER)) {
-      return new Xoola(new XoolaServerInvocationHandler(properties));
-    }
-    throw new IllegalArgumentException("Illegal Xoola tier mode " + tierMode);
   }
 
   /**

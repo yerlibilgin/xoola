@@ -52,15 +52,15 @@ public class ServerRegistry {
    */
   public ServerRegistry(Properties properties) {
     String className = (String) properties.get(XoolaProperty.CLIENT_ACCESS_CONTROLLER_CLASS);
-    inverseClientMap = new HashMap<Channel, String>();
-    clientMap = new HashMap<String, Channel> ();
+    inverseClientMap = new HashMap<>();
+    clientMap = new HashMap<>();
 
     if (className == null) {
       LOGGER.warn("Client access controller null. Will allow everyone");
       // do the default configuration
       this.clientAccessController = new ClientAccessController() {
         /**
-         * Allow everyone :-)
+         * Allow everyone
          */
         @Override
         public boolean clientIsAllowed(String id) {
@@ -69,9 +69,9 @@ public class ServerRegistry {
       };
     } else {
       try {
-        LOGGER.info("Load class \"" + className + "\" as access controller");
-        clientMap = new HashMap<String, Channel>();
-        inverseClientMap = new HashMap<Channel, String>();
+        LOGGER.info("Load class {} as access controller", className);
+        clientMap = new HashMap<>();
+        inverseClientMap = new HashMap<>();
         this.clientAccessController = (ClientAccessController) classLoader.loadClass(className).newInstance();
       } catch (Exception ex) {
         throw new IllegalArgumentException(ex);
