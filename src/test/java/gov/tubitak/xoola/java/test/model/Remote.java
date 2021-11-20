@@ -16,7 +16,7 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package gov.tubitak.xoola.java.test;
+package gov.tubitak.xoola.java.test.model;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

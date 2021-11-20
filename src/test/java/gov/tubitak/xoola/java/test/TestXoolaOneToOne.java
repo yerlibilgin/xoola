@@ -21,13 +21,16 @@ package gov.tubitak.xoola.java.test;
 import java.io.FileReader;
 import java.util.Properties;
 
+import gov.tubitak.xoola.java.test.model.Local;
+import gov.tubitak.xoola.java.test.model.LocalInterface;
+import gov.tubitak.xoola.java.test.model.Remote;
+import gov.tubitak.xoola.java.test.model.RemoteInterface;
 import junit.framework.Assert;
 
 import org.slf4j.Logger;
 import gov.tubitak.xoola.core.Xoola;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaTierMode;
-import gov.tubitak.xoola.java.test.TestXoolaMulti.MultiControl;
 import gov.tubitak.xoola.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.AfterClass;
 import org.junit.Before;

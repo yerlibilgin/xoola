@@ -19,6 +19,9 @@ import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.exception.XInvocationException;
 import gov.tubitak.xoola.transport.Invocation;
 import gov.tubitak.xoola.transport.Response;
+import gov.tubitak.xoola.util.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -27,14 +30,6 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import gov.tubitak.xoola.exception.XCommunicationException;
-import gov.tubitak.xoola.exception.XInvocationException;
-import gov.tubitak.xoola.transport.Invocation;
-import gov.tubitak.xoola.transport.Response;
-import gov.tubitak.xoola.util.ObjectUtils;
 
 /**
  * The base invocation handler for a client request

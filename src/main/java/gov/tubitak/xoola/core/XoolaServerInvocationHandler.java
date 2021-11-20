@@ -16,14 +16,13 @@
 
 package gov.tubitak.xoola.core;
 
-import gov.tubitak.xoola.tcpcom.connmanager.server.NettyServer;
-import gov.tubitak.xoola.transport.Invocation;
-import java.util.Properties;
-import org.slf4j.Logger;
 import gov.tubitak.xoola.exception.XIOException;
 import gov.tubitak.xoola.tcpcom.connmanager.server.NettyServer;
 import gov.tubitak.xoola.transport.Invocation;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
 
 public class XoolaServerInvocationHandler extends XoolaInvocationHandler {
  private static final Logger LOGGER = LoggerFactory.getLogger(XoolaServerInvocationHandler.class);

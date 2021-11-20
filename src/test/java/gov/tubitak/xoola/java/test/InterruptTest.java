@@ -5,6 +5,8 @@ import java.util.Properties;
 import gov.tubitak.xoola.core.Xoola;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaTierMode;
+import gov.tubitak.xoola.java.test.model.Remote;
+import gov.tubitak.xoola.java.test.model.RemoteInterface;
 import gov.tubitak.xoola.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.AfterClass;
 import org.junit.Before;

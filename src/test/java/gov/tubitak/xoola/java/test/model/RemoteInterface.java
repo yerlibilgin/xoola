@@ -16,23 +16,31 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package gov.tubitak.xoola.java.test;
+package gov.tubitak.xoola.java.test.model;
 
+import java.io.Serializable;
 
-public class Local implements LocalInterface {
-  private static final long serialVersionUID = -2263511643711634304L;
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see gov.tubitak.xoola.java.test.LocalInterface#strangeAddMethod(int,
-   * java.lang.Double)
+public interface RemoteInterface extends Serializable {
+  /**
+   * @param a
+   * @param b
+   * @return
    */
-  @Override
-  public String strangeAddMethod2(Integer a, Double b, String kanka) {
-    try {
-      return "localllll" + (a + b);
-    } finally {
-    }
-  }
+  String strangeAddMethod(int a, double b);
+
+  /**
+   * @return
+   */
+  void strangeAddMethod3();
+
+  /**
+   * @param appId
+   */
+  void strangeVoidMethod(Long appId);
+
+
+  /**
+   * When called, waits for years.
+   */
+  void tooLongMethod();
 }

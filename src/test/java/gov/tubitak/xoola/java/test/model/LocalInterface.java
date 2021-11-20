@@ -16,31 +16,16 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package gov.tubitak.xoola.java.test;
+package gov.tubitak.xoola.java.test.model;
 
 import java.io.Serializable;
 
-public interface RemoteInterface extends Serializable {
+public interface LocalInterface extends Serializable {
   /**
    * @param a
    * @param b
+   * @param kanka
    * @return
    */
-  String strangeAddMethod(int a, double b);
-
-  /**
-   * @return
-   */
-  void strangeAddMethod3();
-
-  /**
-   * @param appId
-   */
-  void strangeVoidMethod(Long appId);
-
-
-  /**
-   * When called, waits for years.
-   */
-  void tooLongMethod();
+  String strangeAddMethod2(Integer a, Double b, String kanka);
 }
