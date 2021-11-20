@@ -49,6 +49,11 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("unused")
 public class TestXoolaOneToOne {
 
+ static {
+  System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
+ }
+
+
  public static class OneToOneControl implements ClientAccessController {
   String client = "";
   {

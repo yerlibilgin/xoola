@@ -142,7 +142,16 @@ public class NettyClient extends XoolaNettyHandler {
     if (this.channel != null) {
       this.channel.close();
     }
-    LOGGER.info("CLIENT - Stopped.");
+    StringBuilder sb = new StringBuilder();
+
+    //final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+//
+    //for (int i = 2; i < stackTrace.length; ++i) {
+    //  StackTraceElement stackTraceElement = stackTrace[i];
+    //  sb.append('(').append(stackTraceElement.getFileName()).append(':').append(stackTraceElement.getLineNumber()).append(")\n From. ");
+    //}
+    LOGGER.warn("CLIENT - Stopped. ");
+    //    sb.toString());
   }
 
   /**
