@@ -14,44 +14,29 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.tcpcom.connmanager.client;
-
-import gov.tubitak.xoola.transport.TransportObject;
+package gov.tubitak.xoola.tcpcom.connmanager;
 
 /**
  * The type Ping pong.
+ *
  * @author yerlibilgin
  */
-public class PingPong implements TransportObject {
- private static final long serialVersionUID = 6757028768408150419L;
+enum PingPong {
+  PING, PONG;
 
- /**
-  * The P.
-  */
- public int p;
+  /**
+   * If this is PING, return a Ping, else return a Ping
+   *
+   * @return
+   */
+  public PingPong hitBack() {
+    switch (this) {
+      case PING:
+        return PONG;
+      case PONG:
+        return PING;
+    }
 
- /**
-  * The constant PING.
-  */
- public static final int PING = 0;
- /**
-  * The constant PONG.
-  */
- public static final int PONG = 1;
-
- /**
-  * Instantiates a new Ping pong.
-  */
- public PingPong() {
- }
-
- /**
-  * Instantiates a new Ping pong.
-  *
-  * @param p the p
-  */
- public PingPong(int p) {
-  super();
-  this.p = p;
- }
+    throw new IllegalStateException("Impossible state");
+  }
 }

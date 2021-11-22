@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.handshake;
+package gov.tubitak.xoola.tcpcom.handshake2;
 
 import gov.tubitak.xoola.tcpcom.connmanager.server.NettyServer;
 import gov.tubitak.xoola.tcpcom.connmanager.server.ServerRegistry;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.handshake;
+package gov.tubitak.xoola.tcpcom.handshake2;
 
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelFuture;
@@ -218,7 +218,7 @@ public class ClientHandshakeHandler extends ChannelDuplexHandler {
     this.handshakeComplete.set(true);
     this.handshakeFailed.set(false);
     this.latch.countDown();
-    ClientHandshakeHandler.this.nettyClient.setChannel(ctx.channel());
+    //ClientHandshakeHandler.this.nettyClient.setChannel(ctx.channel());
 
     if (this.nettyClient.invocationHandler != null) {
       new Thread(new Runnable() {

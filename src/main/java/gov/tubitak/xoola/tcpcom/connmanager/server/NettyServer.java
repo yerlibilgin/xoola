@@ -15,6 +15,8 @@
  */
 package gov.tubitak.xoola.tcpcom.connmanager.server;
 
+import gov.tubitak.xoola.tcpcom.connmanager.PingPongHandler;
+import gov.tubitak.xoola.tcpcom.handshake2.ProtocolTracker;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelException;
@@ -37,9 +39,7 @@ import java.util.Properties;
 import gov.tubitak.xoola.core.XoolaInvocationHandler;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.exception.XIOException;
-import gov.tubitak.xoola.tcpcom.connmanager.ChannelGuard;
 import gov.tubitak.xoola.tcpcom.connmanager.XoolaNettyHandler;
-import gov.tubitak.xoola.tcpcom.handshake.ServerHandshakeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,10 +106,11 @@ public class NettyServer extends XoolaNettyHandler {
     bootstrap.childHandler(new ChannelInitializer<SocketChannel>() { // (4)
       @Override
       public void initChannel(SocketChannel ch) throws Exception {
+        //FIXME: check one to one thingy
+        ch.pipeline().addLast(new ProtocolTracker(getServerId(), null));
         ch.pipeline().addLast(new ObjectEncoder());
         ch.pipeline().addLast(new ObjectDecoder(101 * _1M, ClassResolvers.weakCachingConcurrentResolver(provider.getClassLoader())));
-        ch.pipeline().addLast(new ChannelGuard());
-        ch.pipeline().addLast(new ServerHandshakeHandler(NettyServer.this, handshakeTimeout));
+        ch.pipeline().addLast(PingPongHandler.createPonger());
         ch.pipeline().addLast(NettyServer.this);
       }
     });
@@ -182,15 +183,6 @@ public class NettyServer extends XoolaNettyHandler {
    */
   public ServerRegistry getServerRegistry() {
     return serverRegistry;
-  }
-
-  /**
-   * Sets server registry.
-   *
-   * @param serverRegistry the server registry
-   */
-  public void setServerRegistry(ServerRegistry serverRegistry) {
-    this.serverRegistry = serverRegistry;
   }
 
   private void notifyClientDisconnect(ChannelHandlerContext ctx) {

@@ -55,16 +55,13 @@ public class RemoteProxyHandler implements java.lang.reflect.InvocationHandler {
     }
 
     if (async) {
-      Runnable r = new Runnable() {
-        @Override
-        public void run() {
-          if (!m.getName().equals("toString")) {
-            try {
-              Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
-              handler.invokeRemote(remoteName, invocation);
-            } catch (Exception e) {
-              LOGGER.error("Error ocurred during asynchronous call " + m + " [" + e.getMessage() + "]", e);
-            }
+      Runnable r = () -> {
+        if (!m.getName().equals("toString")) {
+          try {
+            Invocation invocation = Invocation.createMethodCall(remoteObjectName, m.getName(), args);
+            handler.invokeRemote(remoteName, invocation);
+          } catch (Exception e) {
+            LOGGER.error("Error ocurred during asynchronous call " + m + " [" + e.getMessage() + "]", e);
           }
         }
       };
