@@ -100,18 +100,23 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * @throws IllegalArgumentException if a null result comes.
    */
   public synchronized Object invokeRemote(String remoteClientName, Invocation message) {
+    LOGGER.trace("Wait for monitor");
     synchronized (this.mutex) {
-      receipt = null; //reset it in any case.
-      sendMessage(remoteClientName, message);
-      long timeout = ObjectUtils
-          .getOrDefault(this.properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
+      LOGGER.trace("Enter monitor");
       try {
+        receipt = null; //reset it in any case.
+        sendMessage(remoteClientName, message);
+        long timeout = ObjectUtils
+            .getOrDefault(this.properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
+
         this.mutex.wait(timeout);
       } catch (InterruptedException e) {
         //someone interrupted me.
         //consume receipt just in case
         consumeReceipt();
         throw new XCommunicationException(e);
+      } finally {
+        LOGGER.trace("Exit monitor");
       }
     }
     Response result = this.consumeReceipt();
