@@ -18,7 +18,7 @@ package gov.tubitak.xoola.exception;
 /**
  * An exception that represents a problem occurring during serialization-deserialization
  */
-public class XConversionException extends IllegalStateException {
+public class XConversionException extends XoolaException {
 
   /**
    * Instantiates a new X conversion exception.

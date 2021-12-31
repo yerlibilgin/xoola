@@ -14,24 +14,26 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.core;
+package gov.tubitak.xoola.internal;
 
-import gov.tubitak.xoola.transport.Invocation;
-import java.util.Properties;
+import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.exception.XCommunicationException;
-import gov.tubitak.xoola.tcpcom.connmanager.client.NettyClient;
-import gov.tubitak.xoola.util.ObjectUtils;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.client.NettyClient;
+import gov.tubitak.xoola.transport.Invocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Properties;
+
 /**
  * The type Xoola client invocation handler.
+ *
  * @author yerlibilgin
  */
 public class XoolaClientInvocationHandler extends XoolaInvocationHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(XoolaClientInvocationHandler.class);
-  private NettyClient nettyClient;
-  private String id;
+  private final NettyClient nettyClient;
+  private final String id;
 
   /**
    * Instantiates a new Xoola client invocation handler.
@@ -70,6 +72,6 @@ public class XoolaClientInvocationHandler extends XoolaInvocationHandler {
 
   @Override
   public void start() {
-   nettyClient.start();
+    nettyClient.start();
   }
 }

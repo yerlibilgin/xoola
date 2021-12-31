@@ -19,8 +19,8 @@ import java.io.Serializable;
 
 /**
  * Represents a transport object
- * @author yerlibilgin
  *
+ * @author yerlibilgin
  */
 public interface TransportObject extends Serializable {
 }

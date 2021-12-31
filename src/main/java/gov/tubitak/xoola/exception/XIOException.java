@@ -22,7 +22,7 @@ import java.io.IOException;
  *
  * @author yerlibilgin
  */
-public class XIOException extends IllegalStateException {
+public class XIOException extends XoolaException {
   /**
    * Instantiates a new Xio exception.
    *

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.core;
+package gov.tubitak.xoola.internal;
 
+import gov.tubitak.xoola.core.*;
 import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.exception.XInvocationException;
 import gov.tubitak.xoola.transport.Invocation;
-import gov.tubitak.xoola.transport.Response;
-import gov.tubitak.xoola.util.ObjectUtils;
+import gov.tubitak.xoola.transport.ResponseConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The base invocation handler for a client request
@@ -39,6 +38,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class XoolaInvocationHandler extends Observable implements CancellableInvocation {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(XoolaInvocationHandler.class);
+
+  private static final KeyedObjectPool<String, ResponseConsumer> mutexPool = KeyedObjectPool.createFixSizedPool(100);
 
   /**
    * The type Observer wrapper.
@@ -73,11 +74,8 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * The Names map.
    */
   final HashMap<String, Object> NAMES_MAP = new HashMap<String, Object>();
-  private AtomicInteger invocationCounter;
 
-  private Response receipt;
-  private Properties properties;
-  private Object mutex;
+  private final Properties properties;
 
   /**
    * Instantiates a new Xoola invocation handler.
@@ -86,7 +84,6 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    */
   public XoolaInvocationHandler(Properties properties) {
     this.properties = properties;
-    this.mutex = new Object();
   }
 
   /**
@@ -99,47 +96,30 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * @throws XInvocationException     if a remote error occurs.
    * @throws IllegalArgumentException if a null result comes.
    */
-  public synchronized Object invokeRemote(String remoteClientName, Invocation message) {
-    LOGGER.trace("Wait for monitor");
-    synchronized (this.mutex) {
-      LOGGER.trace("Enter monitor");
+  public Object invokeRemote(String remoteClientName, Invocation message) {
+    String key = mutexPool.borrowKey();
+    ResponseConsumer<Object> value = mutexPool.getObject(key);
+
+    //noinspection SynchronizationOnLocalVariableOrMethodParameter
+    synchronized (value) {
+      value.reset();
+      message.setInvocationUID(key);
+      sendMessage(remoteClientName, message);
+      long timeout = ObjectUtils
+          .getOrDefault(this.properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
+
       try {
-        receipt = null; //reset it in any case.
-        sendMessage(remoteClientName, message);
-        long timeout = ObjectUtils
-            .getOrDefault(this.properties.get(XoolaProperty.NETWORK_RESPONSE_TIMEOUT), XoolaPropertyDefaults.NETWORK_RESPONSE_TIMEOUT);
-
-        this.mutex.wait(timeout);
-      } catch (InterruptedException e) {
-        //someone interrupted me.
-        //consume receipt just in case
-        consumeReceipt();
-        throw new XCommunicationException(e);
+        return value.tryConsume(timeout);
       } finally {
-        LOGGER.trace("Exit monitor");
+        mutexPool.putBack(key, value);
       }
     }
-    Response result = this.consumeReceipt();
-
-    if (result != null) {
-      if (result.returnValue instanceof Throwable) {
-        throw new XCommunicationException((Throwable) result.returnValue);
-      } else {
-        return result.returnValue;
-      }
-    }
-
-    throw new XCommunicationException("Couldn't get a result in the given time");
   }
 
+  @Deprecated
   @Override
   public void cancel() {
-    try {
-      synchronized (this.mutex) {
-        this.mutex.notify();
-      }
-    } catch (Exception ex) {
-    }
+    LOGGER.warn("cancel() is not supported");
   }
 
   /**
@@ -156,21 +136,15 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    * @param invocation the invocation
    * @return the object
    */
-  public Object receiveInvocation(Invocation invocation) {
-    Response response = new Response();
+  public Response receiveInvocation(Invocation invocation) {
     if (this.NAMES_MAP.containsKey(invocation.objectName)) {
-      // System.out.print(invocation.objectName + "." + invocation.methodName + ".(");
       Object callee = this.NAMES_MAP.get(invocation.objectName);
-      Object args[] = invocation.params;
+      Object[] args = invocation.params;
 
-      Class<?> argTypes[] = null;
+      Class<?>[] argTypes;
       if (args == null) {
         argTypes = new Class<?>[0];
       } else {
-        // for (Object object : args) {
-        // System.out.print(((object == null) ? "null" : object.getClass()) + ",");
-        // }
-        // LOGGER.debug(")");
         argTypes = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
           if (args[i] == null) {
@@ -184,16 +158,15 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
         Method m = findMethod(callee.getClass(), invocation.methodName, argTypes);
         m.setAccessible(true);
         Object o = m.invoke(callee, args);
-        response.returnValue = o;
+        return Response.create(invocation.getInvocationUID(), o);
       } catch (Throwable e) {
-        response.returnValue = e;
+        return Response.create(invocation.getInvocationUID(), e);
       }
 
     } else {
-      LOGGER.warn("No registered object named {}", invocation.objectName);
-      response.returnValue = new UnsupportedOperationException("No registered object named \"" + invocation.objectName + "\"");
+      LOGGER.error("No registered object named {}", invocation.objectName);
+      return Response.create(invocation.getInvocationUID(), new UnsupportedOperationException("No registered object named \"" + invocation.objectName + "\""));
     }
-    return response;
   }
 
   private Method findMethod(Class<? extends Object> class1, String methodName, Class<?>[] argTypes) throws NoSuchMethodException {
@@ -245,13 +218,11 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
   /**
    * Receive response.
    *
-   * @param receipt the receipt
+   * @param response the response
    */
-  public void receiveResponse(Response receipt) {
-    this.receipt = receipt;
-    synchronized (this.mutex) {
-      this.mutex.notifyAll();
-    }
+  public void receiveResponse(Response response) {
+    ResponseConsumer<Object> carrier = mutexPool.getObject(response.invocationUID);
+    carrier.fireResponseReceived(response.value);
   }
 
   /**
@@ -261,19 +232,6 @@ public abstract class XoolaInvocationHandler extends Observable implements Cance
    */
   public void addConnectionListener(XoolaConnectionListener connectionStateListener) {
     this.addObserver(new ObserverWrapper(connectionStateListener));
-  }
-
-  /**
-   * Consume receipt response.
-   *
-   * @return the response
-   */
-  protected synchronized Response consumeReceipt() {
-    try {
-      return this.receipt;
-    } finally {
-      this.receipt = null;
-    }
   }
 
   /**

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.core;
+package gov.tubitak.xoola.internal;
 
 import gov.tubitak.xoola.exception.XCommunicationException;
 import gov.tubitak.xoola.transport.Invocation;
@@ -33,9 +33,9 @@ public class RemoteProxyHandler implements java.lang.reflect.InvocationHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteProxyHandler.class);
   private final String remoteObjectName;
   private final XoolaInvocationHandler handler;
-  private boolean async;
-  private ExecutorService threadPool;
-  private String remoteName;
+  private final boolean async;
+  private final ExecutorService threadPool;
+  private final String remoteName;
 
   public RemoteProxyHandler(String remoteName, String remoteObjectName, XoolaInvocationHandler handler, boolean async) {
     this.remoteName = remoteName;

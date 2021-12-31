@@ -13,21 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.handshake;
+package gov.tubitak.xoola.internal.tcpcom.handshake;
 
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelPromise;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.client.NettyClient;
+import io.netty.channel.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import gov.tubitak.xoola.tcpcom.connmanager.client.NettyClient;
-import org.slf4j.LoggerFactory;
 
 /**
  * Original author: <a href="mailto:bruno@factor45.org">Bruno de Carvalho</a>
@@ -45,7 +42,7 @@ public class ClientHandshakeHandler extends ChannelDuplexHandler {
   private final Queue<Object> messages = new ArrayDeque<Object>();
   private final Object handshakeMutex = new Object();
 
-  private NettyClient nettyClient;
+  private final NettyClient nettyClient;
 
   /**
    * Instantiates a new Client handshake handler.

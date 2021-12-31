@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import gov.tubitak.xoola.core.Xoola;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaTierMode;
-import gov.tubitak.xoola.tcpcom.connmanager.server.ClientAccessController;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;

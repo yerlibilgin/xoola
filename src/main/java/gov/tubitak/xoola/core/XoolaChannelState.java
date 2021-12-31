@@ -18,6 +18,7 @@ package gov.tubitak.xoola.core;
 
 /**
  * The type Xoola channel state.
+ *
  * @author yerlibilgin
  */
 public class XoolaChannelState {

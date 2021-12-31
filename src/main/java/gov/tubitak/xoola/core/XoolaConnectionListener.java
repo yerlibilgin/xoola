@@ -16,6 +16,8 @@
 
 package gov.tubitak.xoola.core;
 
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
+
 /**
  * Provides callbacks to inform about the current connection state
  *

@@ -16,6 +16,10 @@
 
 package gov.tubitak.xoola.core;
 
+import gov.tubitak.xoola.internal.XoolaClientInvocationHandler;
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
+import gov.tubitak.xoola.internal.XoolaServerInvocationHandler;
+
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
@@ -81,7 +85,7 @@ public class Xoola {
    * @return the t
    */
   public <T> T get(Class<T> interfaze, String remoteObjectName) {
-    return (T) this.handler.get(interfaze, remoteObjectName);
+    return this.handler.get(interfaze, remoteObjectName);
   }
 
   /**
@@ -94,7 +98,7 @@ public class Xoola {
    * @return the t
    */
   public <T> T get(Class<T> interfaze, String remoteObjectName, boolean async) {
-    return (T) this.handler.get(interfaze, remoteObjectName, async);
+    return this.handler.get(interfaze, remoteObjectName, async);
   }
 
   /**
@@ -107,7 +111,7 @@ public class Xoola {
    * @return the t
    */
   public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName) {
-    return (T) this.handler.get(interfaze, remoteName, remoteObjectName);
+    return this.handler.get(interfaze, remoteName, remoteObjectName);
   }
 
   /**
@@ -121,7 +125,7 @@ public class Xoola {
    * @return the t
    */
   public <T> T get(Class<T> interfaze, String remoteName, String remoteObjectName, boolean async) {
-    return (T) this.handler.get(interfaze, remoteName, remoteObjectName, async);
+    return this.handler.get(interfaze, remoteName, remoteObjectName, async);
   }
 
   /**
@@ -162,7 +166,7 @@ public class Xoola {
           name.equalsIgnoreCase(XoolaProperty.HANDSHAKE_TIMEOUT) ||
           name.equalsIgnoreCase(XoolaProperty.NETWORK_RESPONSE_TIMEOUT) ||
           name.equalsIgnoreCase(XoolaProperty.RECONNECT_RETRY_TIMEOUT)) {
-         //@formatter:on
+        //@formatter:on
         properties.put(name, Integer.parseInt(properties.getProperty(name)));
       } else {
         properties.put(name, properties.getProperty(name));

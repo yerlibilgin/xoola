@@ -15,17 +15,13 @@
  */
 package gov.tubitak.xoola.transport;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Represents a remote invocation
  *
  * @author yerlibilgin
  */
 public class Invocation implements TransportObject {
-  private static final Logger LOGGER = LoggerFactory.getLogger(Invocation.class);
-  private static final long serialVersionUID = -199341454272572550L;
+  private String invocationUID;
 
   /**
    * Create method call invocation.
@@ -86,5 +82,13 @@ public class Invocation implements TransportObject {
     this.methodName = methodName;
     this.type = type;
     this.params = params;
+  }
+
+  public String getInvocationUID() {
+    return invocationUID;
+  }
+
+  public void setInvocationUID(String invocationUID) {
+    this.invocationUID = invocationUID;
   }
 }

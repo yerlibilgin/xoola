@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.transport;
+
+package gov.tubitak.xoola.internal.tcpcom.connmanager.server;
 
 /**
- * The type Response.
- *
- * @author yerlibilgin
+ * Determine whether the client is allowed to access the called resource
  */
-public class Response implements TransportObject {
-  private static final long serialVersionUID = 1L;
+public interface ClientAccessController {
+
   /**
-   * The Return value.
+   * is the provided client id allowed to create connection to the system?
+   *
+   * @param id the id of the client
+   * @return true if the client is allowed
    */
-  public Object returnValue;
+  boolean clientIsAllowed(String id);
 }

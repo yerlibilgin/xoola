@@ -17,25 +17,26 @@ package gov.tubitak.xoola.exception;
 
 /**
  * The type X communication exception.
+ *
  * @author yerlibilgin
  */
-public class XCommunicationException extends RuntimeException {
-    /**
-     * Instantiates a new X communication exception.
-     *
-     * @param message the message
-     */
-    public XCommunicationException(String message) {
-        super(message);
-    }
+public class XCommunicationException extends XoolaException {
+  /**
+   * Instantiates a new X communication exception.
+   *
+   * @param message the message
+   */
+  public XCommunicationException(String message) {
+    super(message);
+  }
 
-    /**
-     * Instantiates a new X communication exception.
-     *
-     * @param cause the cause
-     */
-    public XCommunicationException(Throwable cause) {
-        super(cause);
-    }
+  /**
+   * Instantiates a new X communication exception.
+   *
+   * @param cause the cause
+   */
+  public XCommunicationException(Throwable cause) {
+    super(cause);
+  }
 
 }

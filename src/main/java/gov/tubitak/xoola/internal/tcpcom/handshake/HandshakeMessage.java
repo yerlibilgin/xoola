@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package gov.tubitak.xoola.internal.tcpcom.handshake;
 
-package gov.tubitak.xoola.tcpcom.connmanager.server;
+import gov.tubitak.xoola.transport.TransportObject;
 
 /**
- * Determine whether the client is allowed to access the called resource
+ * A POJO for client-server handshake
  */
-public interface ClientAccessController {
-
+public class HandshakeMessage implements TransportObject {
   /**
-   * is the provided client id allowed to create connection to the system?
-   * @param id the id of the client
-   * @return true if the client is allowed
+   *
    */
-  boolean clientIsAllowed(String id);
+  private static final long serialVersionUID = -6054120973034178121L;
+  public final String message;
+
+  public HandshakeMessage(String message) {
+    this.message = message;
+  }
+
 }

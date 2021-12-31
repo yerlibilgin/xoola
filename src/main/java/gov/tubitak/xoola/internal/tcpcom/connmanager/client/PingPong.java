@@ -14,44 +14,45 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.tcpcom.connmanager.client;
+package gov.tubitak.xoola.internal.tcpcom.connmanager.client;
 
 import gov.tubitak.xoola.transport.TransportObject;
 
 /**
  * The type Ping pong.
+ *
  * @author yerlibilgin
  */
 public class PingPong implements TransportObject {
- private static final long serialVersionUID = 6757028768408150419L;
+  private static final long serialVersionUID = 6757028768408150419L;
 
- /**
-  * The P.
-  */
- public int p;
+  /**
+   * The P.
+   */
+  public int p;
 
- /**
-  * The constant PING.
-  */
- public static final int PING = 0;
- /**
-  * The constant PONG.
-  */
- public static final int PONG = 1;
+  /**
+   * The constant PING.
+   */
+  public static final int PING = 0;
+  /**
+   * The constant PONG.
+   */
+  public static final int PONG = 1;
 
- /**
-  * Instantiates a new Ping pong.
-  */
- public PingPong() {
- }
+  /**
+   * Instantiates a new Ping pong.
+   */
+  public PingPong() {
+  }
 
- /**
-  * Instantiates a new Ping pong.
-  *
-  * @param p the p
-  */
- public PingPong(int p) {
-  super();
-  this.p = p;
- }
+  /**
+   * Instantiates a new Ping pong.
+   *
+   * @param p the p
+   */
+  public PingPong(int p) {
+    super();
+    this.p = p;
+  }
 }

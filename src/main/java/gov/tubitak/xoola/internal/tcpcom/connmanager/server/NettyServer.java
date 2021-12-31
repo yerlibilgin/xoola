@@ -13,35 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.connmanager.server;
+package gov.tubitak.xoola.internal.tcpcom.connmanager.server;
 
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
+import gov.tubitak.xoola.core.XoolaProperty;
+import gov.tubitak.xoola.exception.XIOException;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.ChannelGuard;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.XoolaNettyHandler;
+import gov.tubitak.xoola.internal.tcpcom.handshake.ServerHandshakeHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelException;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Properties;
-
-import gov.tubitak.xoola.core.XoolaInvocationHandler;
-import gov.tubitak.xoola.core.XoolaProperty;
-import gov.tubitak.xoola.exception.XIOException;
-import gov.tubitak.xoola.tcpcom.connmanager.ChannelGuard;
-import gov.tubitak.xoola.tcpcom.connmanager.XoolaNettyHandler;
-import gov.tubitak.xoola.tcpcom.handshake.ServerHandshakeHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents the server side of the connection
@@ -56,7 +48,7 @@ public class NettyServer extends XoolaNettyHandler {
   private ChannelFuture acceptor;
   private ServerRegistry serverRegistry;
   private IClassLoaderProvider provider;
-  private EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
+  private final EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
   /**
    * The Worker group.
    */

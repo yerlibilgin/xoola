@@ -17,9 +17,10 @@ package gov.tubitak.xoola.exception;
 
 /**
  * The type Xoola invocation exception.
+ *
  * @author yerlibilgin
  */
-public class XInvocationException extends RuntimeException {
+public class XInvocationException extends XoolaException {
   /**
    * Instantiates a new X invocation exception.
    *

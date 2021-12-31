@@ -21,20 +21,20 @@ package gov.tubitak.xoola.transport;
  * @author yerlibilgin
  */
 public enum InvocationType {
-    /**
-     * Call invocation type.
-     */
-    CALL,
-    /**
-     * Create invocation type.
-     */
-    CREATE,
-    /**
-     * Result invocation type.
-     */
-    RESULT,
-    /**
-     * Result error invocation type.
-     */
-    RESULT_ERROR;
+  /**
+   * Call invocation type.
+   */
+  CALL,
+  /**
+   * Create invocation type.
+   */
+  CREATE,
+  /**
+   * Result invocation type.
+   */
+  RESULT,
+  /**
+   * Result error invocation type.
+   */
+  RESULT_ERROR
 }

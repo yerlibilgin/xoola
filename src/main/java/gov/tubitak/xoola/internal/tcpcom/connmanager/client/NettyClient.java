@@ -14,41 +14,29 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.tcpcom.connmanager.client;
+package gov.tubitak.xoola.internal.tcpcom.connmanager.client;
 
-import gov.tubitak.xoola.core.XoolaInvocationHandler;
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
 import gov.tubitak.xoola.core.XoolaProperty;
+import gov.tubitak.xoola.core.XoolaPropertyDefaults;
 import gov.tubitak.xoola.exception.XCommunicationException;
-import gov.tubitak.xoola.tcpcom.handshake.ClientHandshakeHandler;
-import gov.tubitak.xoola.util.ObjectUtils;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.ChannelGuard;
+import gov.tubitak.xoola.internal.tcpcom.handshake.ClientHandshakeHandler;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.XoolaNettyHandler;
+import gov.tubitak.xoola.internal.ObjectUtils;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPromise;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.InetSocketAddress;
 import java.util.Properties;
-import org.slf4j.Logger;
-import gov.tubitak.xoola.core.XoolaInvocationHandler;
-import gov.tubitak.xoola.core.XoolaProperty;
-import gov.tubitak.xoola.core.XoolaPropertyDefaults;
-import gov.tubitak.xoola.exception.XCommunicationException;
-import gov.tubitak.xoola.tcpcom.connmanager.ChannelGuard;
-import gov.tubitak.xoola.tcpcom.connmanager.XoolaNettyHandler;
-import gov.tubitak.xoola.tcpcom.handshake.ClientHandshakeHandler;
-import gov.tubitak.xoola.util.ObjectUtils;
-import org.slf4j.LoggerFactory;
 
 /**
  * The client side of the p2p connection.
@@ -61,15 +49,15 @@ public class NettyClient extends XoolaNettyHandler {
   private static final Logger LOGGER = LoggerFactory.getLogger(NettyClient.class);
   private static final int _1M = 1024 * 1024;
 
-  private String serverHost;
-  private InetSocketAddress remoteAddress;
-  private int connectTimeout;
+  private final String serverHost;
+  private final InetSocketAddress remoteAddress;
+  private final int connectTimeout;
   private ChannelGuard channelGuard;
   /**
    * The Channel.
    */
   protected Channel channel;
-  private String clientId;
+  private final String clientId;
   /**
    * The Ping timeout.
    */
@@ -142,16 +130,7 @@ public class NettyClient extends XoolaNettyHandler {
     if (this.channel != null) {
       this.channel.close();
     }
-    StringBuilder sb = new StringBuilder();
-
-    //final StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-//
-    //for (int i = 2; i < stackTrace.length; ++i) {
-    //  StackTraceElement stackTraceElement = stackTrace[i];
-    //  sb.append('(').append(stackTraceElement.getFileName()).append(':').append(stackTraceElement.getLineNumber()).append(")\n From. ");
-    //}
-    LOGGER.warn("CLIENT - Stopped. ");
-    //    sb.toString());
+    LOGGER.warn("CLIENT - Stopped.");
   }
 
   /**

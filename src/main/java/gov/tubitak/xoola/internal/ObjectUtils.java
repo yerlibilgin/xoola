@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.util;
+package gov.tubitak.xoola.internal;
 
 /**
  * The type Object utils.
@@ -23,8 +23,8 @@ public class ObjectUtils {
   /**
    * Check  if <code>object</code> is not null and return it, if it is null return the default value.
    *
-   * @param <T>    the type parameter
-   * @param object the object
+   * @param <T>          the type parameter
+   * @param object       the object
    * @param defaultValue the default value
    * @return or default
    */

@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.tcpcom.connmanager.server;
+package gov.tubitak.xoola.internal.tcpcom.connmanager.server;
 
-import io.netty.channel.Channel;
-import java.util.HashMap;
-import java.util.Properties;
 import gov.tubitak.xoola.core.XoolaProperty;
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Properties;
+
 /**
  * The type Server registry.
+ *
  * @author yerlibilgin
  */
 public class ServerRegistry {
@@ -34,7 +36,7 @@ public class ServerRegistry {
    */
   public static ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
   private static final Logger LOGGER = LoggerFactory.getLogger(ServerRegistry.class);
-  private ClientAccessController clientAccessController;
+  private final ClientAccessController clientAccessController;
 
   /**
    * The Client map.

@@ -16,26 +16,22 @@
  * this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package gov.tubitak.xoola.tcpcom.connmanager;
+package gov.tubitak.xoola.internal.tcpcom.connmanager;
 
-import gov.tubitak.xoola.core.XoolaInvocationHandler;
-import gov.tubitak.xoola.core.XoolaProperty;
-import gov.tubitak.xoola.transport.Invocation;
-import gov.tubitak.xoola.transport.Response;
-import gov.tubitak.xoola.util.ObjectUtils;
-import io.netty.channel.ChannelDuplexHandler;
-import io.netty.channel.ChannelHandlerContext;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import gov.tubitak.xoola.core.XoolaInvocationHandler;
+import gov.tubitak.xoola.internal.Response;
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
 import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaPropertyDefaults;
 import gov.tubitak.xoola.transport.Invocation;
-import gov.tubitak.xoola.transport.Response;
-import gov.tubitak.xoola.util.ObjectUtils;
+import gov.tubitak.xoola.internal.ObjectUtils;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Netty transport handler
@@ -84,18 +80,21 @@ public abstract class XoolaNettyHandler extends ChannelDuplexHandler {
 
   @Override
   public void channelRead(final ChannelHandlerContext ctx, final Object message) {
-
     if (message instanceof Invocation) {
+      //I received an invocation i have to execute it
       executorService.submit(new Runnable() {
-        private Object actualMessage = message;
-        private ChannelHandlerContext actualContext = ctx;
+        private final Object actualMessage = message;
+        private final ChannelHandlerContext actualContext = ctx;
+
         @Override
         public void run() {
-          Object result = XoolaNettyHandler.this.getHandler().receiveInvocation((Invocation) actualMessage);
+          final Invocation invocation = (Invocation) this.actualMessage;
+          Object result = XoolaNettyHandler.this.getHandler().receiveInvocation(invocation);
           actualContext.channel().writeAndFlush(result);
         }
       });
     } else if (message instanceof Response) {
+      //I received a response.
       this.getHandler().receiveResponse((Response) message);
     } else {
       LOGGER.warn("Invalid message " + message);

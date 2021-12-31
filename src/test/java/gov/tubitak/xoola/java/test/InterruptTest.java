@@ -7,7 +7,7 @@ import gov.tubitak.xoola.core.XoolaProperty;
 import gov.tubitak.xoola.core.XoolaTierMode;
 import gov.tubitak.xoola.java.test.model.Remote;
 import gov.tubitak.xoola.java.test.model.RemoteInterface;
-import gov.tubitak.xoola.tcpcom.connmanager.server.ClientAccessController;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -111,7 +111,7 @@ public class InterruptTest {
     }
 
     if (interrupted == false)
-      throw new RuntimeException("Thread was not interrupted!");
+      throw new IllegalStateException("Thread was not interrupted!");
 
     server.unregisterObject("remoteTestObject");
 

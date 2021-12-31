@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.handshake;
+package gov.tubitak.xoola.internal.tcpcom.handshake;
 
-import gov.tubitak.xoola.tcpcom.connmanager.server.NettyServer;
-import gov.tubitak.xoola.tcpcom.connmanager.server.ServerRegistry;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.server.NettyServer;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.server.ServerRegistry;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import gov.tubitak.xoola.tcpcom.connmanager.server.NettyServer;
-import gov.tubitak.xoola.tcpcom.connmanager.server.ServerRegistry;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -100,8 +99,8 @@ public class ServerHandshakeHandler extends ChannelDuplexHandler {
         ServerRegistry registry = nettyServer.getServerRegistry();
         if (!registry.isAllowed(receivedClientId)) {
           errorMessage = "The client id is not in the registry";
-          } else if (registry.hasUser(receivedClientId)) {
-            errorMessage = "Handshake failed: '" + receivedClientId + "' is already connected";
+        } else if (registry.hasUser(receivedClientId)) {
+          errorMessage = "Handshake failed: '" + receivedClientId + "' is already connected";
         } else {
           challengeSuccess(ctx, receivedClientId);
           return;

@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package gov.tubitak.xoola.tcpcom.connmanager;
+package gov.tubitak.xoola.internal.tcpcom.connmanager;
 
-import gov.tubitak.xoola.tcpcom.connmanager.client.PingPong;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.client.PingPong;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.InetSocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import gov.tubitak.xoola.tcpcom.connmanager.client.PingPong;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A guard (waiter) to check the channel state
+ *
  * @author yerlibilgin
  */
 @ChannelHandler.Sharable
@@ -97,7 +98,7 @@ public class ChannelGuard extends ChannelDuplexHandler {
     }
   }
 
-  private TimerTask lostChannelReconnector = new TimerTask() {
+  private final TimerTask lostChannelReconnector = new TimerTask() {
     @Override
     public void run() {
       try {
@@ -111,7 +112,7 @@ public class ChannelGuard extends ChannelDuplexHandler {
     }
   };
 
-  private TimerTask pingTask = new TimerTask() {
+  private final TimerTask pingTask = new TimerTask() {
     final PingPong pingPong = new PingPong(PingPong.PING);
 
     @Override

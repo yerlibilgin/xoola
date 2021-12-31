@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package gov.tubitak.xoola.tcpcom.connmanager.server;
+package gov.tubitak.xoola.internal.tcpcom.connmanager.server;
 
 
 /**

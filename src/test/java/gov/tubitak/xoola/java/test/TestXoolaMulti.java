@@ -19,7 +19,8 @@
 package gov.tubitak.xoola.java.test;
 
 import gov.tubitak.xoola.core.*;
-import gov.tubitak.xoola.tcpcom.connmanager.server.ClientAccessController;
+import gov.tubitak.xoola.internal.XoolaInvocationHandler;
+import gov.tubitak.xoola.internal.tcpcom.connmanager.server.ClientAccessController;
 import org.junit.*;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;

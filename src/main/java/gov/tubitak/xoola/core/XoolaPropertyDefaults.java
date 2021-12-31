@@ -19,16 +19,16 @@ package gov.tubitak.xoola.core;
  * @author yerlibilgin
  */
 public interface XoolaPropertyDefaults {
-   String HOST = "localhost";
-   String SERVERID = "xoolaServer";
-   String CLIENTID = "xoolaClient";
+  String HOST = "localhost";
+  String SERVERID = "xoolaServer";
+  String CLIENTID = "xoolaClient";
 
-   int PORT = 25000;
-   int NETWORK_RESPONSE_TIMEOUT = 50000;
-   int PING_TIMEOUT = 50000;
-   int RECONNECT_RETRY_TIMEOUT = 10000;
-   int HANDSHAKE_TIMEOUT = 20000;
+  int PORT = 25000;
+  int NETWORK_RESPONSE_TIMEOUT = 50000;
+  int PING_TIMEOUT = 50000;
+  int RECONNECT_RETRY_TIMEOUT = 10000;
+  int HANDSHAKE_TIMEOUT = 20000;
 
-   String CLIENT_ACCESS_CONTROLLER_CLASS = "CLIENT_ACCESS_CONTROLLER_CLASS";
-   String CLASS_LOADER_PROVIDER_CLASS = "CLASS_LOADER_PROVIDER_CLASS";
+  String CLIENT_ACCESS_CONTROLLER_CLASS = "CLIENT_ACCESS_CONTROLLER_CLASS";
+  String CLASS_LOADER_PROVIDER_CLASS = "CLASS_LOADER_PROVIDER_CLASS";
 }
