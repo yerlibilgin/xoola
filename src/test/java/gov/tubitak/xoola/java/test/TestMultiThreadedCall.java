@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
  * @author yerlibilgin
  */
 @SuppressWarnings("unused")
+@Ignore
 public class TestMultiThreadedCall {
   static {
     System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
